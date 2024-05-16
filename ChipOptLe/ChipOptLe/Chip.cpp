@@ -107,17 +107,17 @@ void Chip::run()
                 opcode_8XY1(opcode);
                 break;
             }
-            case 0x0002: //8XY0: Sets VX to the value of VY
+            case 0x0002: //8XY2: Sets VX to VX AND VY
             {
                 opcode_8XY2(opcode);
                 break;
             }
-            case 0x0003: //8XY2: Sets VX to VX AND VY
+            case 0x0003: //8XY3: Sets VX to VX xor VY.[13]
             {
                 opcode_8XY3(opcode);
                 break;
             }
-            case 0x0004: //Adds VY to VX. VF is set to 1 when carry applies else to 0
+            case 0x0004: //8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
             {
                 opcode_8XY4(opcode);
                 break;
@@ -375,58 +375,156 @@ void Chip::opcode_5XY0(uint16_t opcode)
 
 void Chip::opcode_6XNN(uint16_t opcode)
 {
-    // to be implemented
+    // 6XNN: Set VX to NN
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    V[x] = opcode & 0x00FF;
+    pc += 2;
+    std::cout << "Setting V[" << x << "] to " << (int)V[x] << std::endl;
 }
 
 
 void Chip::opcode_7XNN(uint16_t opcode)
 {
-    // to be implemented
+    //7XNN: Adds NN to VX
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t nn = opcode & 0x00FF;
+    V[x] += nn;
+    pc += 2;
+    std::cout << "Adding " << nn << " to V[" << x << "] = " << (int)V[x] << std::endl;
 }
 
 void Chip::opcode_8XY0(uint16_t opcode)
 {
-    // to be implemented
+    //8XY0: Sets VX to the value of VY
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "Setting V[" << x << "] to " << (V[y]) << std::endl;
+    V[x] = V[y];
+    pc += 2;
 }
 
 void Chip::opcode_8XY1(uint16_t opcode)
 {
-    // to be implemented
+    //8XY1 Sets VX to VX or VY.
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "Setting V[" << x << "] = V[" << x << "] | V[" << y << "]" << std::endl;
+    V[x] = (V[x] | V[y]) & 0xFF;
+    pc += 2;
 }
 
 void Chip::opcode_8XY2(uint16_t opcode)
 {
-    // to be implemented
+    //8XY2: Sets VX to VX AND VY
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "Set V[" << x << "] to V[" << x << "] = " << (V[x]) << " & V[" << y << "] = " << (V[y]) << " = " << (V[x] & V[y]) << std::endl;
+    V[x] = V[x] & V[y];
+    pc += 2;
 }
 
 void Chip::opcode_8XY3(uint16_t opcode)
 {
-    // to be implemented
+    //8XY3: Sets VX to VX xor VY.[13]
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "Setting V[" << x << "] = V[" << x << "] ^ V[" << y << "]" << std::endl;
+    V[x] = (V[x] ^ V[y]) & 0xFF;
+    pc += 2;
 }
 
 void Chip::opcode_8XY4(uint16_t opcode)
 {
-    // to be implemented
+    //8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
+    //Add VY to VX. VF is set to 1 when carry applies else to 0
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "Adding V[" << x << "] (" << (V[x]) << ") to V[" << y << "] (" << (V[y]) << ") = " << ((V[x] + V[y]) & 0xFF) << ", ";
+    if (V[y] > 0xFF - V[x])   // V[y] > 0xFF(max value) - V[x] | Ex to understand:    k > 10 - 5  -> if k > 5 , carry
+    {
+        V[0xF] = 1;
+        std::cout << "Carry!" << std::endl;
+    }
+    else
+    {
+        V[0xF] = 0;
+        std::cout << "No Carry" << std::endl;
+    }
+    V[x] = (V[x] + V[y]) & 0xFF;
+    pc += 2;
 }
 
 void Chip::opcode_8XY5(uint16_t opcode)
 {
-    // to be implemented
+    //8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, 
+    // and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    std::cout << "V[" << x << "] = " << (V[x]) << " V[" << y << "] = " << (V[y]) << ", ";
+    if (V[x] > V[y])
+    {
+        V[0xF] = 1;
+        std::cout << "No Borrow" << std::endl;
+    }
+    else
+    {
+        V[0xF] = 0;
+        std::cout << "Borrow" << std::endl;
+    }
+    V[x] = (V[x] - V[y]) & 0xFF;   
+    pc += 2;
 }
 
 void Chip::opcode_8XY6(uint16_t opcode)
-{
-    // to be implemented
+{   
+
+    //8XY6: Shift VX right by one, VF is set to the least significant bit of VX
+    //   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
+    //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
+
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    V[0xF] = V[x] & 0x1;   //VF = least significant bit of VX
+    V[x] = V[x] >> 1;
+    pc += 2;
+    std::cout << "Shift V[ " << x << "] >> 1 and VF to LSB of VX" << std::endl;
 }
 
 void Chip::opcode_8XY7(uint16_t opcode)
 {
-    // to be implemented
+    //8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+
+    if (V[x] > V[y])
+    {
+        V[0xF] = 0;
+        std::cout << "Borrow" << std::endl;
+    }
+    else
+    {
+        V[0xF] = 1;
+        std::cout << "No Borrow" << std::endl;
+    }
+
+    V[x] = (V[y] - V[x]) & 0xFF;
+    std::cout << "V[" << x << "] = V[" << y << "] - V[" << x << "], Applies Borrow if needed" << std::endl;
+    pc += 2;
 }
 
 void Chip::opcode_8XYE(uint16_t opcode)
 {
-    // to be implemented
+    //8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+    //   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
+    //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
+
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    V[0xF] = V[x] & 0x80;
+    V[x] = V[x] << 1;
+    pc += 2;
+    std::cout << "Shift V[ " << x << "] << 1 and VF to MSB of VX" << std::endl;
 }
 
 
