@@ -1,9 +1,2 @@
 ﻿  Chip.cpp
-  ChipOptLe.cpp
-  Generating Code...
-C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(20,80): warning C4244: 'argument': conversion from '_Rep' to 'unsigned int', possible loss of data
-C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(20,80): warning C4244:         with
-C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(20,80): warning C4244:         [
-C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(20,80): warning C4244:             _Rep=__int64
-C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(20,80): warning C4244:         ]
   ChipOptLe.vcxproj -> C:\Users\boss\source\repos\ChipOptLe\x64\Debug\ChipOptLe.exe

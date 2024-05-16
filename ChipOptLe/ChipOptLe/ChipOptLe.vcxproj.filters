@@ -29,5 +29,8 @@
     <ClInclude Include="Chip.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ChipFontset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

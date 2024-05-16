@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
+#include "ChipFontset.h"
 
 
 //Initialize everything to avoid possible unwanted behaviour
@@ -32,28 +33,28 @@ void Chip::run()
     uint16_t opcode = (memory[pc] << 8) | memory[pc + 1];
     std::cout << std::hex << std::uppercase << opcode << ": ";
 
-    //Decode opcode
+    //Decode opcode + execute when done decoding
     switch (opcode & 0xF000)
     {
     case 0x0000: //Multi-case
     {
         switch (opcode & 0x00FF)
         {
-        case 0x00E0: //00E0: Clear Screen
-        {
-            opcode_00E0();
-            break;
-        }
-        case 0x00EE: //00EE: Returns from subroutine
-        {
-            opcode_00EE();
-            break;
-        }
-        default: //0NNN: Calls RCA 1802 Program at address NNN
-        {
-            unsupportedOpcode();
-            break;
-        }
+            case 0x00E0: //00E0: Clear Screen
+            {
+                opcode_00E0();
+                break;
+            }
+            case 0x00EE: //00EE: Returns from subroutine
+            {
+                opcode_00EE();
+                break;
+            }
+            default: //0NNN: Calls RCA 1802 Program at address NNN ( NOT USED IN MODERN IMPLEMENTATIONS )
+            {
+                unsupportedOpcode();
+                break;
+            }
         }
         break; // Added this break to match the opening brace
     }
@@ -96,56 +97,56 @@ void Chip::run()
     {
         switch (opcode & 0x000F)
         {
-        case 0x0000: //8XY0: Sets VX to the value of VY
-        {
-            opcode_8XY0(opcode);
-            break;
-        }
-        case 0x0001: //8XY1 Sets VX to VX or VY.
-        {
-            opcode_8XY1(opcode);
-            break;
-        }
-        case 0x0002: //8XY0: Sets VX to the value of VY
-        {
-            opcode_8XY2(opcode);
-            break;
-        }
-        case 0x0003: //8XY2: Sets VX to VX AND VY
-        {
-            opcode_8XY3(opcode);
-            break;
-        }
-        case 0x0004: //Adds VY to VX. VF is set to 1 when carry applies else to 0
-        {
-            opcode_8XY4(opcode);
-            break;
-        }
-        case 0x0005: //VY is subtracted from VX. VF is set to 0 when there is a borrow else 1
-        {
-            opcode_8XY5(opcode);
-            break;
-        }
-        case 0x0006: //8XY6: Shift VX right by one, VF is set to the least significant bit of VX
-        {
-            opcode_8XY6(opcode);
-            break;
-        }
-        case 0x0007: //8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
-        {
-            opcode_8XY7(opcode);
-            break;
-        }
-        case 0x000E: //8XYE Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
-        {
-            opcode_8XYE(opcode);
-            break;
-        }
-        default:
-        {
-            unsupportedOpcode();
-            break;
-        }
+            case 0x0000: //8XY0: Sets VX to the value of VY
+            {
+                opcode_8XY0(opcode);
+                break;
+            }
+            case 0x0001: //8XY1 Sets VX to VX or VY.
+            {
+                opcode_8XY1(opcode);
+                break;
+            }
+            case 0x0002: //8XY0: Sets VX to the value of VY
+            {
+                opcode_8XY2(opcode);
+                break;
+            }
+            case 0x0003: //8XY2: Sets VX to VX AND VY
+            {
+                opcode_8XY3(opcode);
+                break;
+            }
+            case 0x0004: //Adds VY to VX. VF is set to 1 when carry applies else to 0
+            {
+                opcode_8XY4(opcode);
+                break;
+            }
+            case 0x0005: //VY is subtracted from VX. VF is set to 0 when there is a borrow else 1
+            {
+                opcode_8XY5(opcode);
+                break;
+            }
+            case 0x0006: //8XY6: Shift VX right by one, VF is set to the least significant bit of VX
+            {
+                opcode_8XY6(opcode);
+                break;
+            }
+            case 0x0007: //8XY7 Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+            {
+                opcode_8XY7(opcode);
+                break;
+            }
+            case 0x000E: //8XYE Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
+            {
+                opcode_8XYE(opcode);
+                break;
+            }
+            default:
+            {
+                unsupportedOpcode();
+                break;
+            }
         }
         break; // Added this break to match the opening brace
     }
@@ -178,21 +179,21 @@ void Chip::run()
     {
         switch (opcode & 0x00FF)
         {
-        case 0x009E: //EX9E Skip the next instruction if the Key VX is pressed
-        {
-            opcode_EX9E(opcode);
-            break;
-        }
-        case 0x00A1: //EXA1 Skip the next instruction if the Key VX is NOT pressed
-        {
-            opcode_EXA1(opcode);
-            break;
-        }
-        default:
-        {
-            unsupportedOpcode();
-            break;
-        }
+            case 0x009E: //EX9E Skip the next instruction if the Key VX is pressed
+            {
+                opcode_EX9E(opcode);
+                break;
+            }
+            case 0x00A1: //EXA1 Skip the next instruction if the Key VX is NOT pressed
+            {
+                opcode_EXA1(opcode);
+                break;
+            }
+            default:
+            {
+                unsupportedOpcode();
+                break;
+            }
         }
         break; // Added this break to match the opening brace
     }
@@ -200,56 +201,56 @@ void Chip::run()
     {
         switch (opcode & 0x00FF)
         {
-        case 0x0007: //FX07: Set VX to the value of delay_timer
-        {
-            opcode_FX07(opcode);
-            break;
-        }
-        case 0x000A: //FX0A A key press is awaited, and then stored in VX.
-        {
-            opcode_FX0A(opcode);
-            break;
-        }
-        case 0x0015:  //FX15: Set delay timer to V[x]
-        {
-            opcode_FX15(opcode);
-            break;
-        }
-        case 0x0018:  //FX18: Set the sound timer to V[x]
-        {
-            opcode_FX18(opcode);
-            break;
-        }
-        case 0x001E:  //FX1E: Adds VX to I
-        {
-            opcode_FX1E(opcode);
-            break;
-        }
-        case 0x0029:  //FX29: Sets I to the location of the sprite for the character VX (Fontset)
-        {
-            opcode_FX29(opcode);
-            break;
-        }
-        case 0x0033:  //FX33 Store a binary-coded decimal value VX in I, I + 1 and I + 2
-        {
-            opcode_FX33(opcode);
-            break;
-        }
-        case 0x0055:  //FX55 Stores V0 to VX in memory starting at address I.
-        {
-            opcode_FX55(opcode);
-            break;
-        }
-        case 0x0065:  //FX65 Fills V0 to VX with values from I
-        {
-            opcode_FX65(opcode);
-            break;
-        }
-        default:
-        {
-            unsupportedOpcode();
-            break;
-        }
+            case 0x0007: //FX07: Set VX to the value of delay_timer
+            {
+                opcode_FX07(opcode);
+                break;
+            }
+            case 0x000A: //FX0A A key press is awaited, and then stored in VX.
+            {
+                opcode_FX0A(opcode);
+                break;
+            }
+            case 0x0015:  //FX15: Set delay timer to V[x]
+            {
+                opcode_FX15(opcode);
+                break;
+            }
+            case 0x0018:  //FX18: Set the sound timer to V[x]
+            {
+                opcode_FX18(opcode);
+                break;
+            }
+            case 0x001E:  //FX1E: Adds VX to I
+            {
+                opcode_FX1E(opcode);
+                break;
+            }
+            case 0x0029:  //FX29: Sets I to the location of the sprite for the character VX (Fontset)
+            {
+                opcode_FX29(opcode);
+                break;
+            }
+            case 0x0033:  //FX33 Store a binary-coded decimal value VX in I, I + 1 and I + 2
+            {
+                opcode_FX33(opcode);
+                break;
+            }
+            case 0x0055:  //FX55 Stores V0 to VX in memory starting at address I.
+            {
+                opcode_FX55(opcode);
+                break;
+            }
+            case 0x0065:  //FX65 Fills V0 to VX with values from I
+            {
+                opcode_FX65(opcode);
+                break;
+            }
+            default:
+            {
+                unsupportedOpcode();
+                break;
+            }
         }
         break; // Added this break to match the opening brace
     }
@@ -275,172 +276,236 @@ void Chip::unsupportedOpcode()
 
 void Chip::opcode_00E0()
 {
-    // to be implemented
+    // Clear Screen
+    for (int i = 0; i < sizeof(display); i++)
+    {
+        display[i] = 0;
+    }
+    pc += 2;
 }
 
 void Chip::opcode_00EE()
 {
-    // to be implemented
+    // Returns from subroutine
+
+    stackPointer--;
+    pc = stack[stackPointer];
+    std::cout << "Returning to " << std::hex << std::uppercase << pc << std::endl;
 }
 
-void Chip::opcode_1NNN(unsigned short opcode)
+void Chip::opcode_1NNN(uint16_t opcode)
+{
+    //1NNN: Jumps to address NNN
+    uint16_t nnn = opcode & 0x0FFF;
+    pc = nnn;
+    std::cout << "Jumping to " << std::hex << std::uppercase << pc << std::endl;
+}
+
+void Chip::opcode_2NNN(uint16_t opcode)
+{   
+    //2NNN: Calls subroutine at NNN
+    
+    // stack is a LIFO(last in, first out)
+    // Example for opcode behaviour to help understand: 
+    // pc = 0x200  ( current instruction in memory )
+    // stack[0] = pc ( 0x200)   | Store return address to stack[0] 
+    // stackpointer increment 
+    // pc = opcode & 0xFFF ( NNN )
+    // so basically Save current instruction from memory  to stack , PC go to nnn 
+    // ( do whatever untill returning from subroutine , in which case stack decrements and
+    // PC = original position )
+
+    uint16_t nnn = opcode & 0x0FFF;
+
+    stack[stackPointer] = pc;
+    stackPointer++;
+    pc = nnn;
+    std::cout << "Calling " << std::hex << std::uppercase << pc << " from " << std::hex << std::uppercase << stack[stackPointer - 1] << std::endl;
+}
+
+void Chip::opcode_3XNN(uint16_t opcode)
+{
+    //3XNN: Skips the next instruction if VX equals NN
+    uint16_t x = (opcode & 0x0F00) >> 8; // shift right to become Right most nibble as I need the number itself
+    uint16_t nn = opcode & 0x00FF;
+
+    if (V[x] == nn)
+    {
+        pc += 4;
+        std::cout << "Skipping next instruction (V[" << x << "] == " << nn << ")" << std::endl;
+    }
+    else
+    {
+        pc += 2;
+        std::cout << "Not skipping next instruction (V[" << x << "] =/= " << nn << ")" << std::endl;
+    }
+}
+
+void Chip::opcode_4XNN(uint16_t opcode)
+{
+    uint16_t x = (opcode & 0x0F00) >> 8;  // shift right to become Right most nibble as I need the number itself
+    uint16_t nn = opcode & 0x00FF;
+    if (V[x] != nn)
+    {
+        std::cout << "Skipping next instruction V[" << x << "] = " << V[x] << " != " << nn << std::endl;
+        pc += 4;
+    }
+    else
+    {
+        std::cout << "Not skipping next instruction V[" << x << "] = " << V[x] << " == " << nn << std::endl;
+        pc += 2;
+    }
+}
+
+void Chip::opcode_5XY0(uint16_t opcode)
+{
+    uint16_t x = (opcode & 0x0F00) >> 8;  //same as 4XNN
+    uint16_t y = (opcode & 0x00F0) >> 4;  // here same as X but less bits to shift for Y to become rightm ost nibble
+    if (V[x] == V[y])
+    {
+        std::cout << "Skipping next instruction V[" << x << "] == V[" << y << "]" << std::endl;
+        pc += 4;
+    }
+    else
+    {
+        std::cout << "Skipping next instruction V[" << x << "] =/= V[" << y << "]" << std::endl;
+        pc += 2;
+    }
+}
+
+void Chip::opcode_6XNN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_2NNN(unsigned short opcode)
+
+void Chip::opcode_7XNN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_3XNN(unsigned short opcode)
+void Chip::opcode_8XY0(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_4XNN(unsigned short opcode)
+void Chip::opcode_8XY1(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_5XY0(unsigned short opcode)
+void Chip::opcode_8XY2(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_6XNN(unsigned short opcode)
+void Chip::opcode_8XY3(uint16_t opcode)
 {
     // to be implemented
 }
 
-
-void Chip::opcode_7XNN(unsigned short opcode)
+void Chip::opcode_8XY4(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_8XY0(unsigned short opcode)
+void Chip::opcode_8XY5(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_8XY1(unsigned short opcode)
+void Chip::opcode_8XY6(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_8XY2(unsigned short opcode)
+void Chip::opcode_8XY7(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_8XY3(unsigned short opcode)
-{
-    // to be implemented
-}
-
-void Chip::opcode_8XY4(unsigned short opcode)
-{
-    // to be implemented
-}
-
-void Chip::opcode_8XY5(unsigned short opcode)
-{
-    // to be implemented
-}
-
-void Chip::opcode_8XY6(unsigned short opcode)
-{
-    // to be implemented
-}
-
-void Chip::opcode_8XY7(unsigned short opcode)
-{
-    // to be implemented
-}
-
-void Chip::opcode_8XYE(unsigned short opcode)
+void Chip::opcode_8XYE(uint16_t opcode)
 {
     // to be implemented
 }
 
 
-void Chip::opcode_9XY0(unsigned short opcode)
+void Chip::opcode_9XY0(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_ANNN(unsigned short opcode)
+void Chip::opcode_ANNN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_BNNN(unsigned short opcode)
+void Chip::opcode_BNNN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_CXNN(unsigned short opcode)
+void Chip::opcode_CXNN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_DXYN(unsigned short opcode)
+void Chip::opcode_DXYN(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_EX9E(unsigned short opcode)
+void Chip::opcode_EX9E(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_EXA1(unsigned short opcode)
+void Chip::opcode_EXA1(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX07(unsigned short opcode)
+void Chip::opcode_FX07(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX0A(unsigned short opcode)
+void Chip::opcode_FX0A(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX15(unsigned short opcode)
+void Chip::opcode_FX15(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX18(unsigned short opcode)
+void Chip::opcode_FX18(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX1E(unsigned short opcode)
+void Chip::opcode_FX1E(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX29(unsigned short opcode)
+void Chip::opcode_FX29(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX33(unsigned short opcode)
+void Chip::opcode_FX33(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX55(unsigned short opcode)
+void Chip::opcode_FX55(uint16_t opcode)
 {
     // to be implemented
 }
 
-void Chip::opcode_FX65(unsigned short opcode)
+void Chip::opcode_FX65(uint16_t opcode)
 {
     // to be implemented
 }
@@ -451,4 +516,31 @@ void Chip::opcode_FX65(unsigned short opcode)
 //========================================================================================================================//
 
 
-//loadprogram - to be implemented
+// Load the program into memory
+void Chip::loadProgram(const std::string& filePath)
+{
+    std::ifstream input(filePath, std::ios::binary);
+    if (!input)
+    {
+        std::cerr << "Error opening file: " << filePath << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    int offset = 0;
+    char byte;  // char seems to be standard for reading binary files in cpp
+    while (input.read(&byte, 1))
+    {
+        memory[0x200 + offset] = static_cast<uint8_t>(byte);  //cast to uint8_t as that is the datatype of memory representation of the chip
+        offset++;
+    }
+}
+
+void Chip::loadFontset()
+{
+    constexpr int fontsetSize = 80; // Size of the fontset array
+    for (int i = 0; i < fontsetSize; i++)
+    {
+        memory[0x50 + i] = ChipFontset::fontset[i] & 0xFF;
+    }
+}
+
