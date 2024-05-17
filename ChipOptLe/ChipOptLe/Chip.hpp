@@ -33,7 +33,7 @@ private:
 
     uint8_t delay_timer;
     uint8_t sound_timer;
-
+    bool needRedraw;
 
 
 

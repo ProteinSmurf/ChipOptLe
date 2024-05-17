@@ -150,7 +150,7 @@ void Chip::run()
         }
         break; // Added this break to match the opening brace
     }
-    case 0x9000:
+    case 0x9000:  //Skips the next instruction if VX doesn't equal VY. (Usually the next instruction is a jump to skip a code block)
     {
         opcode_9XY0(opcode);
         break;
@@ -529,82 +529,251 @@ void Chip::opcode_8XYE(uint16_t opcode)
 
 
 void Chip::opcode_9XY0(uint16_t opcode)
-{
-    // to be implemented
+{   
+    // 9XY0: Skips the next instruction if VX doesn't equal VY. 
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+    if (V[x] != V[y])
+    {
+        std::cout << "Skipping next instruction V[" << x << "] != V[" << y << "]" << std::endl;
+        pc += 4;
+    }
+    else
+    {
+        std::cout << "Skipping next instruction V[" << x << "] !/= V[" << y << "]" << std::endl;
+        pc += 2;
+    }
 }
 
 void Chip::opcode_ANNN(uint16_t opcode)
 {
-    // to be implemented
+    // ANNN: Set I register to NNN
+    uint16_t nnn = opcode & 0x0FFF;
+    I = nnn;
+    pc += 2; 
+    std::cout << "Set I to " << std::hex << std::uppercase << I << std::endl;
 }
 
 void Chip::opcode_BNNN(uint16_t opcode)
 {
-    // to be implemented
+    // BNNN: Jumps to the address NNN plus V0
+    uint16_t nnn = opcode & 0x0FFF;
+    pc = nnn + (V[0] & 0xFF);
 }
 
 void Chip::opcode_CXNN(uint16_t opcode)
 {
-    // to be implemented
+    // CXNN: Set VX to a random number and NN
+    // Random number  (Typically: 0 to 255) 
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t nn = (opcode & 0x00FF);
+    uint16_t randomNumber = rand() % 256;
+
+    std::cout << "V[" << x << "] has been set to (randomized) " << randomNumber << std::endl;
+    V[x] = randomNumber & nn;
+    pc += 2;
 }
 
 void Chip::opcode_DXYN(uint16_t opcode)
 {
-    // to be implemented
+    // DXYN: Draw a sprite (X, Y) size (8, N). Sprite is located at I
+    // draw(Vx,Vy,N)
+
+
+    // Draws a sprite at coordinate(VX, VY) that has a width of 8 pixels and a height of N pixels.
+    // Each row of 8 pixels is read as bit - coded starting from memory location I; 
+    // I value doesn’t change after the execution of this instruction.
+    // As described above, VF is set to 1 if any screen pixels are flipped from set to unset 
+    // when the sprite is drawn, and to 0 if that doesn’t happrm
+
+
+    // X, Y ,N from opcode
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;
+
+    int cordinate_X = V[x];
+    int cordinate_Y = V[y];
+    int height_N = opcode & 0x000F;
+
+    constexpr int total_display_width = 64;
+    constexpr int total_display_height = 32;
+
+    V[0xF] = 0;  //flag register - no collision (0)
+
+
+    //box of size 8*height_N
+    for (int _y = 0; _y < height_N; _y++)   //vertical
+    {
+        // I  points to the memory location where the sprite data is stored.
+        // 
+        //    Memory Address : 0x50   0x51   0x52   0x53   0x54
+        //    Sprite Data :    0xF0   0x90   0x90   0x90   0xF0
+        //    Display:
+        //    1 1 1 1 0 0 1 1  - 0xF0
+        //    0 0 0 1 0 0 1 0  - 0x90
+        //    0 0 0 1 0 0 1 0  - 0x90
+        //    0 0 0 1 0 0 1 0  - 0x90
+        //    1 1 1 1 0 0 1 1  - 0xF0
+
+        int row = memory[I + _y];
+        
+        for (int _x = 0; _x < 8; _x++)    //width  Each row of 8 pixels is read as bit
+        {
+            int pixel = row & (0x80 >> _x);  //0x80 = 256 = 1000 0000
+            if (pixel != 0) 
+            {
+                //Dispaly 64x32 ( width * height )
+                int totalX = (cordinate_X + _x) % total_display_width;
+                int totalY = (cordinate_Y + _y) % total_display_height;  
+                //if we step out of bounds start from beginning again
+                int index = (totalY * 64) + totalX;
+
+                if (display[index] == 1)
+                {
+                    V[0xF] = 1;
+                }
+
+                display[index] ^= 1;
+            }
+        }
+    }
+
+    pc += 2;
+
+    std::cout << "Drawing at V[" << x << "] = " << x << ", V[" << y << "] = " << cordinate_Y << std::endl;
+//              display[4*3] - small scale for concept  [width*height]
+// 
+//      [1] [2]  [3]   [4]            [1] [2]  [3]   [4]
+//      [5] [6]  [7]   [8]            [5] [6]  [7]   [8]
+//      [9] [10] [11]  [12]           [9] [10] [11]  [12]
+//    
+//     display[6]  = 4*1 + 2  -> display[n] = height_offset * rows_before + width_offset (magic formula :D )
+//     display[10] = 4*2 + 2
+// 
+//       0   0   0   0              0   0   0   0
+//       0   0   0   0     ->       0   1   0   0
+//       0   0   0   0              0   0   0   0
+
+
+
 }
 
 void Chip::opcode_EX9E(uint16_t opcode)
 {
-    // to be implemented
+    // EX9E: Skip the next instruction if the Key VX is pressed
+    // Handling input:
+    // Key pressed = 1 , key not pressed = 0  
+    // Actually modifying the values based on keyboard input later
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t key = V[x];
+    if (keys[key] == 1)  
+    {
+        pc += 4;
+    }
+    else
+    {
+        std::cout << "V[" << x << "] = " << V[x] << " is pressed" << std::endl;
+        pc += 2;
+    }
+    std::cout << "Skipping next instruction if V[" << x << "] = " << V[x] << " is pressed" << std::endl;
 }
 
 void Chip::opcode_EXA1(uint16_t opcode)
 {
-    // to be implemented
+    // EXA1: Skip the next instruction if the Key VX is NOT pressed
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t key = V[x];
+    if (keys[key] == 0)
+    {
+        pc += 4;
+    }
+    else
+    {
+        std::cout << "V[" << x << "] = " << (int)V[x] << " is pressed" << std::endl;
+        pc += 2;
+    }
+    std::cout << "Skipping next instruction if V[" << x << "] = " << (int)V[x] << " is NOT pressed" << std::endl;
 }
 
 void Chip::opcode_FX07(uint16_t opcode)
 {
-    // to be implemented
+    //FX07: sets VX to the value of the delay timer
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    V[x] = delay_timer;
+    pc += 2;
+    std::cout << "V[" << x << "] has been set to " << delay_timer << std::endl;
 }
 
 void Chip::opcode_FX0A(uint16_t opcode)
 {
-    // to be implemented
+    //FX0A:
+    // A key press is awaited, 
+    //  and then stored in VX (blocking operation, all instruction halted until next key event)
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    for (int i = 0; i < 16; i++)
+    {
+        //check if any key is pressed
+        if (keys[i] == 1)
+        {
+            V[x] = static_cast<uint8_t>(i); // index of key
+            pc += 2;                        // move forward to next opcode only when key is pressed
+            break;
+        }
+    }
+    std::cout << "Awaiting key press to be stored in V[" << x << "]" << std::endl;
+
 }
 
 void Chip::opcode_FX15(uint16_t opcode)
 {
+    //FX15: Sets the delay timer to VX.[13]
     // to be implemented
 }
 
 void Chip::opcode_FX18(uint16_t opcode)
 {
+    //FX18: Sets the sound timer to VX
     // to be implemented
 }
 
 void Chip::opcode_FX1E(uint16_t opcode)
-{
+{   
+    //FX1E: Adds VX to I. VF is not affected 
     // to be implemented
 }
 
 void Chip::opcode_FX29(uint16_t opcode)
-{
+{   //FX29: Sets I to the location of the sprite for the character in VX.
+    // Characters 0-F (in hexadecimal) are represented by a 4x5 font
     // to be implemented
 }
 
 void Chip::opcode_FX33(uint16_t opcode)
 {
+    //FX33: Stores the binary-coded decimal representation of VX, 
+    //with the hundreds digit in memory at location in I, 
+    // the tens digit at location I+1, 
+    // and the ones digit at location I+2
     // to be implemented
 }
 
 void Chip::opcode_FX55(uint16_t opcode)
 {
+    //FX55: Stores from V0 to VX (including VX) in memory, 
+    //starting at address I. The offset from I is increased by 1 for each value written, 
+    // but I itself is left unmodified
+
     // to be implemented
 }
 
 void Chip::opcode_FX65(uint16_t opcode)
 {
+    //FX65: Fills from V0 to VX (including VX) with values from memory, 
+    //starting at address I. The offset from I is increased by 1 for each value read, 
+    //but I itself is left unmodified
     // to be implemented
 }
 
