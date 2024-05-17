@@ -35,8 +35,6 @@ private:
     uint8_t sound_timer;
     bool needRedraw;
 
-
-
 public:
     int keys[16];
 
@@ -45,6 +43,7 @@ public:
     void init();                                        //  Set everything to 0 to avoid possible unwanted behaviour and ProgramCounter to 0x200 as that is the starting point in memory for loaded ROM
     void run();                                         //  Fetch - Decode - Execute loop
     void loadProgram(const std::string& filePath);      //  Starting from 0x200 , load into memory data from ROM file
+    uint8_t* getDisplay();
 
 private:
     void printMemoryMap();

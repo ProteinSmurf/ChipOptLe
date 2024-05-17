@@ -4,14 +4,16 @@
 #include "Audio.h"
 #include <SFML/Graphics.hpp>
 #include "Chip.hpp"
+#include "ChipManager.hpp"
 
 int main()
 {
-	
-	
 	Chip chip;
 	chip.init();
-	chip.loadProgram("./programs/pong2.c8");
+	chip.loadProgram("./programs/3corax.ch8");
+
+	ChipManager chipManager(chip);
+	chipManager.run();
 
 	return 0;
 }

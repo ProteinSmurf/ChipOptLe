@@ -907,3 +907,8 @@ void Chip::printMemoryMap()
         std::cout << std::endl;
     }
 }
+
+uint8_t* Chip::getDisplay() 
+{
+    return display;
+}

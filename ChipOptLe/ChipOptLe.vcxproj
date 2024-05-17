@@ -131,12 +131,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Chip.cpp" />
+    <ClCompile Include="ChipManager.cpp" />
     <ClCompile Include="ChipOptLe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
     <ClInclude Include="Chip.hpp" />
     <ClInclude Include="ChipFontset.h" />
+    <ClInclude Include="ChipManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
