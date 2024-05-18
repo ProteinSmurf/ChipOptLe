@@ -943,15 +943,14 @@ void Chip::setKeyBuffer(const int* keyBuffer)
 {
     for (int i = 0; i < 16; i++)
     {
-        //keys[i] = (keyBuffer[i] & 0xFF);  // only the lowest 8 bits
         keys[i] = keyBuffer[i];
     }
 
     //for debug
-    std::cout << "\n";
+    /*std::cout << "\n";
     for (int i = 0; i < 16; i++)
     {
         std::cout << "keyBuffer[" << i << "] = " << keys[i] << "\n";
         std::cout << "key[" << i << "] = " << keys[i] << "\n";
-    }
+    }*/
 }

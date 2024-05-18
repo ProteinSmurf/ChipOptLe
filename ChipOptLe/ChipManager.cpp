@@ -15,7 +15,7 @@ void ChipManager::run()
         sf::Event event;
         while (pollEvent(event))
         {
-            std::cout << "Event Type: " << event.type << std::endl; // Print event type
+            //std::cout << "Event Type: " << event.type << std::endl; // Print event type
             if (event.type == sf::Event::Closed)
             {
                 std::cout << "Window Closed" << std::endl;
@@ -105,7 +105,7 @@ const int* ChipManager::getKeyBuffer() const
 void ChipManager::printKeyBuffer() const
 {
     std::cout << "Key Buffer:\n";
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < 16; i++)
     {
         std::cout << keyBuffer[i] << " ";
     }

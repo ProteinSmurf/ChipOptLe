@@ -1,2 +1,3 @@
-﻿  ChipManager.cpp
+﻿  ChipOptLe.cpp
+C:\Users\boss\source\repos\ChipOptLe\ChipOptLe\ChipOptLe.cpp(52,39): warning C4244: 'argument': conversion from 'unsigned __int64' to 'float', possible loss of data
   ChipOptLe.vcxproj -> C:\Users\boss\source\repos\ChipOptLe\x64\Debug\ChipOptLe.exe
