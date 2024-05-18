@@ -10,6 +10,7 @@ public:
     ChipManager(Chip& chip); 
     void run();
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+    void draw();
 
 private:
     Chip& chip;

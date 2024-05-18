@@ -10,7 +10,7 @@ int main()
 {
 	Chip chip;
 	chip.init();
-	chip.loadProgram("./programs/3corax.ch8");
+	chip.loadProgram("./programs/pong2.c8");
 
 	ChipManager chipManager(chip);
 	chipManager.run();

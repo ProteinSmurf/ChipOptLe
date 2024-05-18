@@ -24,6 +24,7 @@ void Chip::init()
     delay_timer = 0;
     sound_timer = 0;
 
+    needRedraw = false;
     loadFontset();
 }
 
@@ -286,6 +287,7 @@ void Chip::opcode_00E0()
         display[i] = 0;
     }
     pc += 2;
+    needRedraw = true;
 }
 
 void Chip::opcode_00EE()
@@ -293,7 +295,7 @@ void Chip::opcode_00EE()
     // Returns from subroutine
 
     stackPointer--;
-    pc = stack[stackPointer];
+    pc = stack[stackPointer] + 2; // move forward from place i left not same place
     std::cout << "Returning to " << std::hex << std::uppercase << pc << std::endl;
 }
 
@@ -645,7 +647,7 @@ void Chip::opcode_DXYN(uint16_t opcode)
     }
 
     pc += 2;
-
+    needRedraw = true;
     std::cout << "Drawing at V[" << x << "] = " << x << ", V[" << y << "] = " << cordinate_Y << std::endl;
 //              display[4*3] - small scale for concept  [width*height]
 // 
@@ -659,8 +661,6 @@ void Chip::opcode_DXYN(uint16_t opcode)
 //       0   0   0   0              0   0   0   0
 //       0   0   0   0     ->       0   1   0   0
 //       0   0   0   0              0   0   0   0
-
-
 
 }
 
@@ -911,4 +911,19 @@ void Chip::printMemoryMap()
 uint8_t* Chip::getDisplay() 
 {
     return display;
+}
+
+bool Chip::needsRedraw() const
+{
+    return needRedraw;
+}
+
+bool Chip::needsRedraw()
+{
+    return needRedraw;
+}
+
+void Chip::removeDrawFlag()
+{
+    needRedraw = false;
 }
