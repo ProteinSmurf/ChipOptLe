@@ -12,8 +12,13 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
     void draw();
 
+    int  mapSFKeyToChip8(sf::Keyboard::Key sfKey);
+    const int* getKeyBuffer() const;
+    void printKeyBuffer() const;
+
 private:
     Chip& chip;
-    //int keyBuffer[16];
+    int keyBuffer[16];
+    std::unordered_map<int, int> keyIdToKey;
 
 };

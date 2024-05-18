@@ -6,6 +6,7 @@
 #include "ChipFontset.h"
 #include <chrono>
 #include <iomanip>
+#include "Audio.h"
 
 
 //Initialize everything to avoid possible unwanted behaviour
@@ -95,7 +96,7 @@ void Chip::run()
     }
     case 0x7000: //7XNN: Adds NN to VX
     {
-        opcode_6XNN(opcode);
+        opcode_7XNN(opcode);
         break;
     }
     case 0x8000: //Contains more data in last nibble
@@ -264,6 +265,16 @@ void Chip::run()
         unsupportedOpcode();
         break;
     }
+    }
+
+    if (sound_timer > 0)
+    {
+        sound_timer--;
+        Audio::playSound("./beep.wav");
+    }
+    if (delay_timer > 0)
+    {
+        delay_timer--;
     }
 }
 
@@ -696,10 +707,10 @@ void Chip::opcode_EXA1(uint16_t opcode)
     }
     else
     {
-        std::cout << "V[" << x << "] = " << (int)V[x] << " is pressed" << std::endl;
+        std::cout << "V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " is pressed" << std::endl;
         pc += 2;
     }
-    std::cout << "Skipping next instruction if V[" << x << "] = " << (int)V[x] << " is NOT pressed" << std::endl;
+    std::cout << "Skipping next instruction if V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " is NOT pressed" << std::endl;
 }
 
 void Chip::opcode_FX07(uint16_t opcode)
@@ -926,4 +937,21 @@ bool Chip::needsRedraw()
 void Chip::removeDrawFlag()
 {
     needRedraw = false;
+}
+
+void Chip::setKeyBuffer(const int* keyBuffer)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        //keys[i] = (keyBuffer[i] & 0xFF);  // only the lowest 8 bits
+        keys[i] = keyBuffer[i];
+    }
+
+    //for debug
+    std::cout << "\n";
+    for (int i = 0; i < 16; i++)
+    {
+        std::cout << "keyBuffer[" << i << "] = " << keys[i] << "\n";
+        std::cout << "key[" << i << "] = " << keys[i] << "\n";
+    }
 }

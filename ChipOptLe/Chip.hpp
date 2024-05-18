@@ -47,6 +47,7 @@ public:
     bool needsRedraw() const;
     bool needsRedraw();
     void removeDrawFlag();
+    void setKeyBuffer(const int* keyBuffer);
 
 private:
     void printMemoryMap();
