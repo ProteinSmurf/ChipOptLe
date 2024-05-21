@@ -4,13 +4,13 @@
 #include <unordered_map>
 #include "Chip.hpp"
 
-class ChipManager : public sf::RenderWindow, public sf::Drawable, public sf::Transformable
+class ChipManager
 {
 public:
-    ChipManager(Chip& chip); 
-    void run();
-    void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-    void draw();
+    ChipManager(Chip& chip, int scale_factor);
+    void run(sf::RenderWindow& target);
+    //void draw();
+    //void draw(sf::RenderWindow& target);
 
     int  mapSFKeyToChip8(sf::Keyboard::Key sfKey);
     const int* getKeyBuffer() const;
@@ -20,5 +20,11 @@ private:
     Chip& chip;
     int keyBuffer[16];
     std::unordered_map<int, int> keyIdToKey;
+
+    int window_width;
+    int window_height;
+    int chip_display_width;
+    int chip_display_height;
+    int scale_factor;
 
 };

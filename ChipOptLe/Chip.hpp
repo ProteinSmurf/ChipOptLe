@@ -44,7 +44,6 @@ public:
     void run();                                         //  Fetch - Decode - Execute loop
     void loadProgram(const std::string& filePath);      //  Starting from 0x200 , load into memory data from ROM file
     uint8_t* getDisplay();
-    bool needsRedraw() const;
     bool needsRedraw();
     void removeDrawFlag();
     void setKeyBuffer(const int* keyBuffer);

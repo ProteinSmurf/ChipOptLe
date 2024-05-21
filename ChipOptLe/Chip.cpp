@@ -614,8 +614,8 @@ void Chip::opcode_DXYN(uint16_t opcode)
     int cordinate_Y = V[y];
     int height_N = opcode & 0x000F;
 
-    constexpr int total_display_width = 64;
-    constexpr int total_display_height = 32;
+    const int total_display_width = 64;
+    const int total_display_height = 32;
 
     V[0xF] = 0;  //flag register - no collision (0)
 
@@ -649,10 +649,13 @@ void Chip::opcode_DXYN(uint16_t opcode)
 
                 if (display[index] == 1)
                 {
-                    V[0xF] = 1;
+                    V[0xF] = 1;  
+                    display[index] = 0;  
                 }
-
-                display[index] ^= 1;
+                else
+                {
+                    display[index] = 1;
+                }
             }
         }
     }
@@ -924,10 +927,6 @@ uint8_t* Chip::getDisplay()
     return display;
 }
 
-bool Chip::needsRedraw() const
-{
-    return needRedraw;
-}
 
 bool Chip::needsRedraw()
 {
