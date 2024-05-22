@@ -23,4 +23,7 @@ Information Sources for using SFML features:
 
 SFML Setup:
  - https://www.youtube.com/watch?v=4fcTqmT0Hhg&t=272s
+
+ROM File Source:
+ - https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html
   
