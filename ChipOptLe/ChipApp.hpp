@@ -15,10 +15,11 @@ public:
     void run();
 
 private:
-    int scale_factor;
-    int game_speed;
-    sf::Color background_Color;
-    sf::Color foreground_Color;
+    int fontSize_;
+    int scaleFactor_;
+    int gameSpeed_;
+    sf::Color backgroundColor_;
+    sf::Color foregroundColor_;
 
     // menus
     void mainMenu(sf::RenderWindow& window);

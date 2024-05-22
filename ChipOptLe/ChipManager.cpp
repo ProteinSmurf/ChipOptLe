@@ -1,35 +1,40 @@
 #include <thread>
 #include "ChipManager.hpp"
 
-ChipManager::ChipManager(Chip& chip, int scale_factor) : chip(chip), scale_factor(scale_factor)
+ChipManager::ChipManager(Chip& chip, int scale_factor) : chip(chip), scaleFactor_(scale_factor)
 {
-    window_width = 640;
-    window_height = 320;
-    chip_display_width = 64;
-    chip_display_height = 32;
-    if (scale_factor != 1 && scale_factor != 2 && scale_factor != 3)
-    {
-        scale_factor = 1; //default size
-    }
-
-    sf::RenderWindow window(sf::VideoMode(scale_factor * window_width, scale_factor * window_height), "Chip 8 Emulator");
-    window.setFramerateLimit(165); //my monitor refresh rate
+    setDefaultParameters();
+    sf::RenderWindow window(sf::VideoMode(scale_factor * windowWidth_, scale_factor * windowHeight_), "Chip 8 Emulator");
     run(window);
+}
 
+void ChipManager::setDefaultParameters()
+{
+    //scaleFactor_ = 1;
+    //chip display based on specs 
+    chipDisplayWidth_ = 64;
+    chipDisplayHeight_ = 32;
+
+    windowWidth_ = chipDisplayWidth_ * 10;
+    windowHeight_ = chipDisplayHeight_ * 10;
+
+    //default black and white theme
+    backgroundColor_ = sf::Color::Black;
+    foregroundColor_ = sf::Color::White;
 
 }
 
-void ChipManager::run(sf::RenderWindow& target)
+void ChipManager::run(sf::RenderWindow& window)
 {
-    while (target.isOpen())
+    while (window.isOpen())
     {
         sf::Event event;
-        while (target.pollEvent(event))
+        while (window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
             {
                 std::cout << "Window Closed" << std::endl;
-                target.close();
+                window.close();
             }
             else if (event.type == sf::Event::KeyPressed)
             {
@@ -57,14 +62,14 @@ void ChipManager::run(sf::RenderWindow& target)
 
         if (chip.needsRedraw())
         {
-            target.clear();
+            window.clear();
 
             //draw pixel onto screen (represented by rectangle of upscaled size)
             const uint8_t* display = chip.getDisplay();
 
-            int rectangleSize = scale_factor * 10;
+            int rectangleSize = scaleFactor_ * 10;
 
-            for (int i = 0; i < chip_display_width * chip_display_height; i++)
+            for (int i = 0; i < chipDisplayWidth_ * chipDisplayHeight_; i++)
             {
 
                 sf::RectangleShape pixel;
@@ -72,29 +77,35 @@ void ChipManager::run(sf::RenderWindow& target)
   
                 if (display[i] == 0)
                 {
-                    pixel.setFillColor(sf::Color::Black);
+                    pixel.setFillColor(backgroundColor_);
                 }
                 else
                 {
-                    pixel.setFillColor(sf::Color::White);
+                    pixel.setFillColor(foregroundColor_);
                 }
 
-                int x = i % chip_display_width;
-                int y = i / chip_display_width;
+                //position based on chip 64x32 display
+                //int x = i % chipDisplayWidth_;
+                //int y = i / chipDisplayWidth_;
+                // set position based on original position * upscale
+                //pixel.setPosition(x * rectangleSize, y * rectangleSize);
 
-                pixel.setPosition(x * rectangleSize, y * rectangleSize);
-                target.draw(pixel);
+                int x = (i % chipDisplayWidth_) * rectangleSize;
+                int y = (i / chipDisplayWidth_) * rectangleSize;
+                pixel.setPosition(x, y);
+        
+                window.draw(pixel);
 
 
             }
-            target.display();
+            window.display();
             chip.removeDrawFlag();
         }
 
-        //DEFAULT CHIP SPEED: 60 Hz ( according to spec )
+        //DEFAULT CHIP SPEED: 60 Hz ( according to spec ) 
         // 60 Hz = 60 cycles / second -> cycleTime = 1/60 ~= 0.167 ms
         /*std::this_thread::sleep_for(std::chrono::milliseconds(16)); */
-        std::this_thread::sleep_for(std::chrono::nanoseconds(1000));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(700));
 
     }
 }

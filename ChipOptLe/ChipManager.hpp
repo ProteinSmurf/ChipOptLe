@@ -7,10 +7,10 @@
 class ChipManager
 {
 public:
-    ChipManager(Chip& chip, int scale_factor);
-    void run(sf::RenderWindow& target);
-    //void draw();
-    //void draw(sf::RenderWindow& target);
+    ChipManager(Chip& chip, int scaleFactor);
+    void run(sf::RenderWindow& window);
+    void setDefaultParameters();
+
 
     int  mapSFKeyToChip8(sf::Keyboard::Key sfKey);
     const int* getKeyBuffer() const;
@@ -21,10 +21,12 @@ private:
     int keyBuffer[16];
     std::unordered_map<int, int> keyIdToKey;
 
-    int window_width;
-    int window_height;
-    int chip_display_width;
-    int chip_display_height;
-    int scale_factor;
+    int windowWidth_;
+    int windowHeight_;
+    int chipDisplayWidth_;
+    int chipDisplayHeight_;
+    int scaleFactor_;
+    sf::Color backgroundColor_;
+    sf::Color foregroundColor_;
 
 };

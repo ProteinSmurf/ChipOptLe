@@ -14,16 +14,17 @@ void ChipApp::initialize()
 {
     std::cout << "Initializing ChipApp by setting default values to customization parameters" << std::endl;
 
-    scale_factor = 2;
-    game_speed = 1000;
+    fontSize_ = 30;
+    scaleFactor_ = 2;
+    gameSpeed_ = 1000;
 
-    std::cout << "Scale Factor: " << scale_factor << std::endl;
-    std::cout << "Game Speed: " << game_speed << std::endl;
+    std::cout << "Scale Factor: " << scaleFactor_ << std::endl;
+    std::cout << "Game Speed: " << gameSpeed_ << std::endl;
 }
 
 void ChipApp::run() 
 {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "ChipApp");
+    sf::RenderWindow window(sf::VideoMode(640, 480), "ChipApp");
     mainMenu(window);
 }
 
@@ -31,15 +32,15 @@ void ChipApp::run()
 void ChipApp:: mainMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Play", font, 24);         // menuItems.emplace_back(<MenuOptionString>, font, fontSize),
-    menuItems.emplace_back("Options", font, 24);
+    menuItems.emplace_back("Play", font, fontSize_);         // menuItems.emplace_back(<MenuOptionString>, font, fontSize_),
+    menuItems.emplace_back("Options", font, fontSize_);
 
 
 
@@ -126,7 +127,8 @@ void ChipApp:: mainMenu(sf::RenderWindow& window)
 
         //after every change , clear by setting everything black , go through menu and redraw , display
         window.clear(sf::Color::Black);
-        for (const auto& item : menuItems) {
+        for (const auto& item : menuItems) 
+        {
             window.draw(item);
         }
         window.display();
@@ -136,15 +138,15 @@ void ChipApp:: mainMenu(sf::RenderWindow& window)
 void ChipApp::playMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Games", font, 24);
-    menuItems.emplace_back("Tests", font, 24);
+    menuItems.emplace_back("Games", font, fontSize_);
+    menuItems.emplace_back("Tests", font, fontSize_);
 
     float totalHeight = 0;
     for (const auto& item : menuItems)
@@ -237,16 +239,16 @@ void ChipApp::playMenu(sf::RenderWindow& window)
 void ChipApp::optionsMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Game Speed", font, 24);
-    menuItems.emplace_back("Color Theme", font, 24);
-    menuItems.emplace_back("Window Size", font, 24);
+    menuItems.emplace_back("Game Speed", font, fontSize_);
+    menuItems.emplace_back("Color Theme", font, fontSize_);
+    menuItems.emplace_back("Window Size", font, fontSize_);
 
 
     float totalHeight = 0;
@@ -336,16 +338,16 @@ void ChipApp::optionsMenu(sf::RenderWindow& window)
 void ChipApp::gameSpeedMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Slow", font, 24);
-    menuItems.emplace_back("Normal", font, 24);
-    menuItems.emplace_back("Fast", font, 24);
+    menuItems.emplace_back("Slow", font, fontSize_);
+    menuItems.emplace_back("Normal", font, fontSize_);
+    menuItems.emplace_back("Fast", font, fontSize_);
 
     float totalHeight = 0;
     for (const auto& item : menuItems)
@@ -398,14 +400,17 @@ void ChipApp::gameSpeedMenu(sf::RenderWindow& window)
                     if (selectedItemIndex == 0)
                     {
                         std::cout << "Game speed set to slow \n";
+                        gameSpeed_ = 2000;
                     }
                     else if (selectedItemIndex == 1)
                     {
                         std::cout << "Game speed set to normal \n";
+                        gameSpeed_ = 1500;
                     }
                     else if (selectedItemIndex == 2)
                     {
                         std::cout << "Game speed set to fast \n";
+                        gameSpeed_ = 900;
                     }
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
@@ -431,7 +436,7 @@ void ChipApp::gameSpeedMenu(sf::RenderWindow& window)
 void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>& programContents)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
@@ -442,7 +447,7 @@ void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>&
 
     for (const auto& game : programContents)
     {
-        menuItems.emplace_back(game, font, 24);
+        menuItems.emplace_back(game, font, fontSize_);
     }
 
     float totalHeight = 0;
@@ -503,7 +508,7 @@ void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>&
                     chip.init();
                     chip.loadProgram(gamePath);
 
-                    ChipManager chipManager(chip, scale_factor);
+                    ChipManager chipManager(chip, scaleFactor_);
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {
@@ -525,7 +530,7 @@ void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>&
 void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>& programContents)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
@@ -536,7 +541,7 @@ void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>&
 
     for (const auto& game : programContents)
     {
-        menuItems.emplace_back(game, font, 24);
+        menuItems.emplace_back(game, font, fontSize_);
     }
 
     float totalHeight = 0;
@@ -597,7 +602,7 @@ void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>&
                     chip.init();
                     chip.loadProgram(gamePath);
 
-                    ChipManager chipManager(chip, scale_factor);
+                    ChipManager chipManager(chip, scaleFactor_);
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {
@@ -619,15 +624,15 @@ void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>&
 void ChipApp::colorThemeMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Color 1", font, 24);
-    menuItems.emplace_back("Color 2", font, 24);
+    menuItems.emplace_back("Color 1", font, fontSize_);
+    menuItems.emplace_back("Color 2", font, fontSize_);
 
     float totalHeight = 0;
     for (const auto& item : menuItems)
@@ -710,16 +715,16 @@ void ChipApp::colorThemeMenu(sf::RenderWindow& window)
 void ChipApp::windowSizeMenu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
     std::vector<sf::Text> menuItems;
-    menuItems.emplace_back("Normal", font, 24);
-    menuItems.emplace_back("Big", font, 24);
-    menuItems.emplace_back("Enourmous", font, 24);
+    menuItems.emplace_back("Normal", font, fontSize_);
+    menuItems.emplace_back("Big", font, fontSize_);
+    menuItems.emplace_back("Enourmous", font, fontSize_);
 
     float totalHeight = 0;
     for (const auto& item : menuItems)
@@ -771,18 +776,18 @@ void ChipApp::windowSizeMenu(sf::RenderWindow& window)
                 {
                     if (selectedItemIndex == 0)
                     {
-                        std::cout << "Window size - normal. Scale_Factor = 1  \n";
-                        scale_factor = 1;
+                        std::cout << "Window size - normal. scaleFactor_ = 1  \n";
+                        scaleFactor_ = 1;
                     }
                     else if (selectedItemIndex == 1)
                     {
-                        std::cout << "Window size - big. Scale_Factor = 2  \n";
-                        scale_factor = 2;
+                        std::cout << "Window size - big. scaleFactor_ = 2  \n";
+                        scaleFactor_ = 2;
                     }
                     else if (selectedItemIndex == 2)
                     {
-                        std::cout << "Window size - enourmous. Scale_Factor = 3  \n";
-                        scale_factor = 3;
+                        std::cout << "Window size - enourmous. scaleFactor_ = 3  \n";
+                        scaleFactor_ = 3;
                     }
 
                 }
@@ -807,13 +812,12 @@ void ChipApp::windowSizeMenu(sf::RenderWindow& window)
 void ChipApp::color1Menu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
     }
 
-    // Define the predefined SFML colors and their names
     std::vector<std::pair<std::string, sf::Color>> colors = {
         {"Black", sf::Color::Black},
         {"White", sf::Color::White},
@@ -829,7 +833,7 @@ void ChipApp::color1Menu(sf::RenderWindow& window)
     std::vector<sf::Text> menuItems;
     for (const auto& color : colors)
     {
-        sf::Text text(color.first, font, 24);
+        sf::Text text(color.first, font, fontSize_);
         menuItems.push_back(text);
     }
 
@@ -882,7 +886,7 @@ void ChipApp::color1Menu(sf::RenderWindow& window)
                 else if (event.key.code == sf::Keyboard::Enter)
                 {
                     std::cout << "Selected color: " << colors[selectedItemIndex].first << "\n";
-                    background_Color = colors[selectedItemIndex].second;
+                    backgroundColor_ = colors[selectedItemIndex].second;
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {
@@ -905,7 +909,7 @@ void ChipApp::color1Menu(sf::RenderWindow& window)
 void ChipApp::color2Menu(sf::RenderWindow& window)
 {
     sf::Font font;
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("munro.ttf"))
     {
         std::cerr << "Failed to load font file." << std::endl;
         return;
@@ -926,7 +930,7 @@ void ChipApp::color2Menu(sf::RenderWindow& window)
     std::vector<sf::Text> menuItems;
     for (const auto& color : colors)
     {
-        sf::Text text(color.first, font, 24);
+        sf::Text text(color.first, font, fontSize_);
         menuItems.push_back(text);
     }
 
@@ -979,7 +983,7 @@ void ChipApp::color2Menu(sf::RenderWindow& window)
                 else if (event.key.code == sf::Keyboard::Enter)
                 {
                     std::cout << "Selected color: " << colors[selectedItemIndex].first << "\n";
-                    foreground_Color = colors[selectedItemIndex].second;
+                    foregroundColor_ = colors[selectedItemIndex].second;
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {

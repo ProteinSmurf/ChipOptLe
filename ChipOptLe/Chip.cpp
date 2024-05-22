@@ -270,7 +270,7 @@ void Chip::run()
     if (sound_timer > 0)
     {
         sound_timer--;
-        Audio::playSound("./beep.wav");
+        Audio::playSound("./sounds/beep.wav");
     }
     if (delay_timer > 0)
     {
