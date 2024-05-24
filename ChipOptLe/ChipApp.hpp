@@ -20,6 +20,7 @@ private:
     int gameSpeed_;
     sf::Color backgroundColor_;
     sf::Color foregroundColor_;
+    std::string soundPath_;
 
     // menus
     void mainMenu(sf::RenderWindow& window);

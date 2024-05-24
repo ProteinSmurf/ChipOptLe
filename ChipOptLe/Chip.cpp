@@ -1,4 +1,4 @@
-#include "Chip.hpp"
+ï»¿#include "Chip.hpp"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -26,6 +26,7 @@ void Chip::init()
     sound_timer = 0;
 
     needRedraw = false;
+    needPlaySound = false;
     loadFontset();
 }
 
@@ -270,7 +271,8 @@ void Chip::run()
     if (sound_timer > 0)
     {
         sound_timer--;
-        Audio::playSound("./sounds/beep.wav");
+        //Audio::playSound("./sounds/beep.wav");
+        needPlaySound = true;
     }
     if (delay_timer > 0)
     {
@@ -436,7 +438,7 @@ void Chip::opcode_8XY2(uint16_t opcode)
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
     std::cout << "Set V[" << x << "] to V[" << x << "] = " << (V[x]) << " & V[" << y << "] = " << (V[y]) << " = " << (V[x] & V[y]) << std::endl;
-    V[x] = V[x] & V[y];
+    V[x] = (V[x] & V[y]) & 0xFF;
     pc += 2;
 }
 
@@ -452,12 +454,20 @@ void Chip::opcode_8XY3(uint16_t opcode)
 
 void Chip::opcode_8XY4(uint16_t opcode)
 {
-    //8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
-    //Add VY to VX. VF is set to 1 when carry applies else to 0
+    // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
+    // Add VY to VX. VF is set to 1 when carry applies else to 0
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
+
     std::cout << "Adding V[" << x << "] (" << (V[x]) << ") to V[" << y << "] (" << (V[y]) << ") = " << ((V[x] + V[y]) & 0xFF) << ", ";
-    if (V[y] > 0xFF - V[x])   // V[y] > 0xFF(max value) - V[x] | Ex to understand:    k > 10 - 5  -> if k > 5 , carry
+
+    uint16_t sum = V[x] + V[y];
+
+ 
+    V[x] = sum & 0xFF;
+
+    //// Check for carry
+    if (sum > 0xFF)
     {
         V[0xF] = 1;
         std::cout << "Carry!" << std::endl;
@@ -467,31 +477,44 @@ void Chip::opcode_8XY4(uint16_t opcode)
         V[0xF] = 0;
         std::cout << "No Carry" << std::endl;
     }
-    V[x] = (V[x] + V[y]) & 0xFF;
+
     pc += 2;
 }
+
 
 void Chip::opcode_8XY5(uint16_t opcode)
 {
-    //8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, 
+    // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, 
     // and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
-
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-    std::cout << "V[" << x << "] = " << (V[x]) << " V[" << y << "] = " << (V[y]) << ", ";
-    if (V[x] > V[y])
+
+    std::cout << "V[" << x << "] = " << static_cast<int>(V[x]) << ", V[" << y << "] = " << static_cast<int>(V[y]) << ", ";
+
+
+    uint8_t originalVx = V[x];
+
+
+    V[x] -= V[y];
+
+    
+    if (V[x] > originalVx)
     {
-        V[0xF] = 1;
-        std::cout << "No Borrow" << std::endl;
+        V[0xF] = 0; 
     }
     else
     {
-        V[0xF] = 0;
-        std::cout << "Borrow" << std::endl;
+        V[0xF] = 1; 
     }
-    V[x] = (V[x] - V[y]) & 0xFF;   
+
     pc += 2;
+    std::cout << "Result: V[" << x << "] = " << static_cast<int>(V[x]) << ", VF: " << static_cast<int>(V[0xF]) << std::endl;
 }
+
+
+
+
+
 
 void Chip::opcode_8XY6(uint16_t opcode)
 {   
@@ -502,6 +525,7 @@ void Chip::opcode_8XY6(uint16_t opcode)
 
 
     uint16_t x = (opcode & 0x0F00) >> 8;
+
     V[0xF] = V[x] & 0x1;   //VF = least significant bit of VX
     V[x] = V[x] >> 1;
     pc += 2;
@@ -510,25 +534,27 @@ void Chip::opcode_8XY6(uint16_t opcode)
 
 void Chip::opcode_8XY7(uint16_t opcode)
 {
-    //8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
+    // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
 
-    if (V[x] > V[y])
+    V[x] = (V[y] - V[x]);
+
+    if (V[y] >= V[x]) //  VY >= VX (no underflow)
     {
-        V[0xF] = 0;
-        std::cout << "Borrow" << std::endl;
+        V[0xF] = 1;
+        std::cout << "No Underflow" << std::endl;
     }
     else
     {
-        V[0xF] = 1;
-        std::cout << "No Borrow" << std::endl;
+        V[0xF] = 0; 
+        std::cout << "Underflow" << std::endl;
     }
-
-    V[x] = (V[y] - V[x]) & 0xFF;
-    std::cout << "V[" << x << "] = V[" << y << "] - V[" << x << "], Applies Borrow if needed" << std::endl;
+    std::cout << "V[" << x << "] = V[" << y << "] - V[" << x << "], Applies Underflow if needed" << std::endl;
     pc += 2;
 }
+
+
 
 void Chip::opcode_8XYE(uint16_t opcode)
 {
@@ -537,11 +563,22 @@ void Chip::opcode_8XYE(uint16_t opcode)
     //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
 
 
+    //In the CHIP-8 interpreter for the original COSMAC VIP, this instruction put the value of VY into VX, 
+    //and then shifted the value in VX 1 bit to the right 
+    //starting with CHIP - 48 and SUPER - CHIP in the early 1990s, 
+    //these instructions were changed so that they shifted VX in place, and ignored the Y completely.
+
     uint16_t x = (opcode & 0x0F00) >> 8;
-    V[0xF] = V[x] & 0x80;
+
+    V[0xF] = (V[x] & 0x80) >> 7;  
     V[x] = V[x] << 1;
     pc += 2;
     std::cout << "Shift V[ " << x << "] << 1 and VF to MSB of VX" << std::endl;
+
+    //temporary comm to check myself
+    //power of 2:  7 6 5 4 - 3 2 1 0         2^0 = 1 , 2^1 = 2, 2^2 = 4, 2^3 = 8, 2^4 = 16, 2^5 = 32, 2^6 = 64, 2^7 = 128 , 2^8 = 256
+    //             1 0 0 0   0 0 0 0     -> 128
+    //   0 0 0 1 - 0 0 0 0 - 0 0 0 0     -> 256
 }
 
 
@@ -575,8 +612,17 @@ void Chip::opcode_ANNN(uint16_t opcode)
 void Chip::opcode_BNNN(uint16_t opcode)
 {
     // BNNN: Jumps to the address NNN plus V0
-    uint16_t nnn = opcode & 0x0FFF;
+    //Starting with CHIP - 48  changed to work as BXNN 
+    // It will jump to the address XNN, plus the value in the register VX.
+    // So the instruction B220 will jump to address 220 plus the value in the register V2.
+
+
+    // I will stick to classic implementation of opcode the more modern one stops games from being playable for me
+    //uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t nnn = (opcode & 0x0FFF);
     pc = nnn + (V[0] & 0xFF);
+
+              
 }
 
 void Chip::opcode_CXNN(uint16_t opcode)
@@ -593,6 +639,7 @@ void Chip::opcode_CXNN(uint16_t opcode)
     pc += 2;
 }
 
+
 void Chip::opcode_DXYN(uint16_t opcode)
 {
     // DXYN: Draw a sprite (X, Y) size (8, N). Sprite is located at I
@@ -601,9 +648,9 @@ void Chip::opcode_DXYN(uint16_t opcode)
 
     // Draws a sprite at coordinate(VX, VY) that has a width of 8 pixels and a height of N pixels.
     // Each row of 8 pixels is read as bit - coded starting from memory location I; 
-    // I value doesn’t change after the execution of this instruction.
+    // I value doesnÂ’t change after the execution of this instruction.
     // As described above, VF is set to 1 if any screen pixels are flipped from set to unset 
-    // when the sprite is drawn, and to 0 if that doesn’t happrm
+    // when the sprite is drawn, and to 0 if that doesnÂ’t happrm
 
 
     // X, Y ,N from opcode
@@ -635,22 +682,22 @@ void Chip::opcode_DXYN(uint16_t opcode)
         //    1 1 1 1 0 0 1 1  - 0xF0
 
         int row = memory[I + _y];
-        
+
         for (int _x = 0; _x < 8; _x++)    //width  Each row of 8 pixels is read as bit
         {
-            int pixel = row & (0x80 >> _x);  //0x80 = 256 = 1000 0000
-            if (pixel != 0) 
+            int pixel = row & (0x80 >> _x);  //0x80 = 128  = 1000 0000
+            if (pixel != 0)
             {
                 //Dispaly 64x32 ( width * height )
                 int totalX = (cordinate_X + _x) % total_display_width;
-                int totalY = (cordinate_Y + _y) % total_display_height;  
+                int totalY = (cordinate_Y + _y) % total_display_height;
                 //if we step out of bounds start from beginning again
                 int index = (totalY * 64) + totalX;
 
                 if (display[index] == 1)
                 {
-                    V[0xF] = 1;  
-                    display[index] = 0;  
+                    V[0xF] = 1;
+                    display[index] = 0;
                 }
                 else
                 {
@@ -663,20 +710,24 @@ void Chip::opcode_DXYN(uint16_t opcode)
     pc += 2;
     needRedraw = true;
     std::cout << "Drawing at V[" << x << "] = " << x << ", V[" << y << "] = " << cordinate_Y << std::endl;
-//              display[4*3] - small scale for concept  [width*height]
-// 
-//      [1] [2]  [3]   [4]            [1] [2]  [3]   [4]
-//      [5] [6]  [7]   [8]            [5] [6]  [7]   [8]
-//      [9] [10] [11]  [12]           [9] [10] [11]  [12]
-//    
-//     display[6]  = 4*1 + 2  -> display[n] = height_offset * rows_before + width_offset (magic formula :D )
-//     display[10] = 4*2 + 2
-// 
-//       0   0   0   0              0   0   0   0
-//       0   0   0   0     ->       0   1   0   0
-//       0   0   0   0              0   0   0   0
+    //              display[4*3] - small scale for concept  [width*height]
+    // 
+    //      [1] [2]  [3]   [4]            [1] [2]  [3]   [4]
+    //      [5] [6]  [7]   [8]            [5] [6]  [7]   [8]
+    //      [9] [10] [11]  [12]           [9] [10] [11]  [12]
+    //    
+    //     display[6]  = 4*1 + 2  -> display[n] = height_offset * rows_before + width_offset (magic formula :D )
+    //     display[10] = 4*2 + 2
+    // 
+    //       0   0   0   0              0   0   0   0
+    //       0   0   0   0     ->       0   1   0   0
+    //       0   0   0   0              0   0   0   0
 
 }
+
+
+
+
 
 void Chip::opcode_EX9E(uint16_t opcode)
 {
@@ -824,6 +875,7 @@ void Chip::opcode_FX55(uint16_t opcode)
         memory[I + offset] = V[i];
         offset++;
     }
+
     std::cout << "Setting Memory[" << std::hex << std::uppercase << I << " + n] = V[0] to V[x]" << std::endl;
     pc += 2;
 }
@@ -873,7 +925,7 @@ void Chip::loadProgram(const std::string& filePath)
 
 void Chip::loadFontset()
 {
-    constexpr int fontsetSize = 80; // Size of the fontset array
+    const int fontsetSize = 80; // Size of the fontset array
     for (int i = 0; i < fontsetSize; i++)
     {
         memory[0x50 + i] = ChipFontset::fontset[i] & 0xFF;
@@ -933,10 +985,21 @@ bool Chip::needsRedraw()
     return needRedraw;
 }
 
+bool Chip::needsPlaySound()
+{
+    return needPlaySound;
+}
+
 void Chip::removeDrawFlag()
 {
     needRedraw = false;
 }
+
+void Chip::removePlaySoundFlag()
+{
+    needPlaySound = false;
+}
+
 
 void Chip::setKeyBuffer(const int* keyBuffer)
 {

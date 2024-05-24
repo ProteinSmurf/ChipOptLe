@@ -15,8 +15,11 @@ void ChipApp::initialize()
     std::cout << "Initializing ChipApp by setting default values to customization parameters" << std::endl;
 
     fontSize_ = 30;
-    scaleFactor_ = 2;
+    scaleFactor_ = 1;
     gameSpeed_ = 1000;
+    backgroundColor_ = sf::Color::Black;
+    foregroundColor_ = sf::Color::White;
+    soundPath_ = "./sound/path";
 
     std::cout << "Scale Factor: " << scaleFactor_ << std::endl;
     std::cout << "Game Speed: " << gameSpeed_ << std::endl;
@@ -24,7 +27,7 @@ void ChipApp::initialize()
 
 void ChipApp::run() 
 {
-    sf::RenderWindow window(sf::VideoMode(640, 480), "ChipApp");
+    sf::RenderWindow window(sf::VideoMode(640, 480), "ChipOptLe");
     mainMenu(window);
 }
 
@@ -90,7 +93,8 @@ void ChipApp:: mainMenu(sf::RenderWindow& window)
             {
                 if (event.key.code == sf::Keyboard::Up)
                 {
-                    if (selectedItemIndex > 0) {
+                    if (selectedItemIndex > 0) 
+                    {
                         menuItems[selectedItemIndex].setFillColor(sf::Color::White);
                         selectedItemIndex--;
                         menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
@@ -508,7 +512,10 @@ void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>&
                     chip.init();
                     chip.loadProgram(gamePath);
 
-                    ChipManager chipManager(chip, scaleFactor_);
+                    ChipManager chipManager(chip);
+                    soundPath_ = "./sounds/1ms_beep_sequence.wav";
+                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_);
+                    chipManager.start();
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {
@@ -602,7 +609,10 @@ void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>&
                     chip.init();
                     chip.loadProgram(gamePath);
 
-                    ChipManager chipManager(chip, scaleFactor_);
+                    ChipManager chipManager(chip);
+                    soundPath_ = "./sounds/1ms_beep_sequence.wav";
+                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_);
+                    chipManager.start();
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
                 {

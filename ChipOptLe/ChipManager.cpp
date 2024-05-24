@@ -1,26 +1,35 @@
 #include <thread>
 #include "ChipManager.hpp"
+#include "Audio.h"
 
-ChipManager::ChipManager(Chip& chip, int scale_factor) : chip(chip), scaleFactor_(scale_factor)
+ChipManager::ChipManager(Chip& chip) : chip(chip) 
 {
-    setDefaultParameters();
-    sf::RenderWindow window(sf::VideoMode(scale_factor * windowWidth_, scale_factor * windowHeight_), "Chip 8 Emulator");
+   
+}
+
+void ChipManager::start()
+{
+    sf::RenderWindow window(sf::VideoMode(scaleFactor_ * windowWidth_, scaleFactor_ * windowHeight_), "ChipOptLe");
     run(window);
 }
 
-void ChipManager::setDefaultParameters()
+void ChipManager::setParameters(int scaleFactor, 
+    int gameSpeed,
+    const sf::Color& backgroundColor, 
+    const sf::Color& foregroundColor,
+    const std::string& soundPath) 
 {
-    //scaleFactor_ = 1;
-    //chip display based on specs 
+    scaleFactor_ = scaleFactor;
+    gameSpeed_ = gameSpeed;
+    backgroundColor_ = backgroundColor;
+    foregroundColor_ = foregroundColor;
+    soundPath_ = soundPath;
+
     chipDisplayWidth_ = 64;
     chipDisplayHeight_ = 32;
 
-    windowWidth_ = chipDisplayWidth_ * 10;
-    windowHeight_ = chipDisplayHeight_ * 10;
-
-    //default black and white theme
-    backgroundColor_ = sf::Color::Black;
-    foregroundColor_ = sf::Color::White;
+    windowWidth_ = 10 * chipDisplayWidth_;
+    windowHeight_ = 10 * chipDisplayHeight_;
 
 }
 
@@ -59,7 +68,15 @@ void ChipManager::run(sf::RenderWindow& window)
         // Update chip with current key buffer
         chip.setKeyBuffer(getKeyBuffer());
         chip.run();
-
+        if (chip.needsPlaySound())
+        {
+            //1ms_beep_sequence
+            //beep
+            Audio::playSound("./sounds/1ms_beep_sequence.wav");
+            chip.removePlaySoundFlag();
+        }
+        
+        
         if (chip.needsRedraw())
         {
             window.clear();
@@ -90,22 +107,36 @@ void ChipManager::run(sf::RenderWindow& window)
                 // set position based on original position * upscale
                 //pixel.setPosition(x * rectangleSize, y * rectangleSize);
 
+                pixel.setOutlineColor(sf::Color::Black);
+                pixel.setOutlineThickness(1.0f);
+
                 int x = (i % chipDisplayWidth_) * rectangleSize;
                 int y = (i / chipDisplayWidth_) * rectangleSize;
                 pixel.setPosition(x, y);
         
                 window.draw(pixel);
 
+                 //   (0, 0)    (10, 0)   (20, 0)   (30, 0)  ... (630, 0)
+                 //   + -------- + -------- + -------- + -------- + ---- ...
+                 //   | 0        | 1        | 2        | 3        |
+                 //   +--------  + -------- + -------- + -------- + ---- ...
+                 //   | 64       | 65       | 66       | 67       |
+                 //   +--------  + -------- + -------- + -------- + ---- ...
+                 //   |          |          |          |          |
+                 //   |          |          |          |          |
+                 //   +--------  + -------- + -------- + -------- + ---- ...
 
             }
             window.display();
+
             chip.removeDrawFlag();
         }
+        
 
         //DEFAULT CHIP SPEED: 60 Hz ( according to spec ) 
         // 60 Hz = 60 cycles / second -> cycleTime = 1/60 ~= 0.167 ms
-        /*std::this_thread::sleep_for(std::chrono::milliseconds(16)); */
-        std::this_thread::sleep_for(std::chrono::nanoseconds(700));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(16)); 
+        //std::this_thread::sleep_for(std::chrono::nanoseconds(700));
 
     }
 }
@@ -128,19 +159,19 @@ int ChipManager::mapSFKeyToChip8(sf::Keyboard::Key sfKey)
     case sf::Keyboard::Num1: return 0x1;
     case sf::Keyboard::Num2: return 0x2;
     case sf::Keyboard::Num3: return 0x3;
-    case sf::Keyboard::Num4: return 0xC;
+    case sf::Keyboard::Num4: return 0xC;  //12
     case sf::Keyboard::Q:    return 0x4;
     case sf::Keyboard::W:    return 0x5;
     case sf::Keyboard::E:    return 0x6;
-    case sf::Keyboard::R:    return 0xD;
+    case sf::Keyboard::R:    return 0xD;  //13
     case sf::Keyboard::A:    return 0x7;
     case sf::Keyboard::S:    return 0x8;
     case sf::Keyboard::D:    return 0x9;
-    case sf::Keyboard::F:    return 0xE;
-    case sf::Keyboard::Z:    return 0xA;
+    case sf::Keyboard::F:    return 0xE;  //14
+    case sf::Keyboard::Z:    return 0xA;  //10
     case sf::Keyboard::X:    return 0x0;
-    case sf::Keyboard::C:    return 0xB;
-    case sf::Keyboard::V:    return 0xF;
+    case sf::Keyboard::C:    return 0xB;  //11
+    case sf::Keyboard::V:    return 0xF;  //15
     default:                  return -1; // Not a Chip-8 key
     }
 }

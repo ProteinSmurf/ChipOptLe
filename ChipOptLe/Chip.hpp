@@ -34,6 +34,7 @@ private:
     uint8_t delay_timer;
     uint8_t sound_timer;
     bool needRedraw;
+    bool needPlaySound;
 
 public:
     int keys[16];
@@ -45,7 +46,9 @@ public:
     void loadProgram(const std::string& filePath);      //  Starting from 0x200 , load into memory data from ROM file
     uint8_t* getDisplay();
     bool needsRedraw();
+    bool needsPlaySound();
     void removeDrawFlag();
+    void removePlaySoundFlag();
     void setKeyBuffer(const int* keyBuffer);
 
 private:
