@@ -6,7 +6,6 @@
 #include "ChipFontset.h"
 #include <chrono>
 #include <iomanip>
-#include "Audio.h"
 
 
 //Initialize everything to avoid possible unwanted behaviour
@@ -271,7 +270,6 @@ void Chip::run()
     if (sound_timer > 0)
     {
         sound_timer--;
-        //Audio::playSound("./sounds/beep.wav");
         needPlaySound = true;
     }
     if (delay_timer > 0)
@@ -437,7 +435,10 @@ void Chip::opcode_8XY2(uint16_t opcode)
     //8XY2: Sets VX to VX AND VY
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-    std::cout << "Set V[" << x << "] to V[" << x << "] = " << (V[x]) << " & V[" << y << "] = " << (V[y]) << " = " << (V[x] & V[y]) << std::endl;
+    std::cout << "Set V[" << static_cast<int>(x) << "] to V[" << static_cast<int>(x) << "] = "
+        << static_cast<int>(V[x]) << " & V[" << static_cast<int>(y) << "] = "
+        << static_cast<int>(V[y]) << " = " << static_cast<int>(V[x] & V[y]) << std::endl;
+
     V[x] = (V[x] & V[y]) & 0xFF;
     pc += 2;
 }
@@ -459,7 +460,10 @@ void Chip::opcode_8XY4(uint16_t opcode)
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
 
-    std::cout << "Adding V[" << x << "] (" << (V[x]) << ") to V[" << y << "] (" << (V[y]) << ") = " << ((V[x] + V[y]) & 0xFF) << ", ";
+    std::cout << "Adding V[" << static_cast<int>(x) << "] (" << static_cast<int>(V[x]) << ") to V["
+        << static_cast<int>(y) << "] (" << static_cast<int>(V[y]) << ") = "
+        << static_cast<int>((V[x] + V[y]) & 0xFF) << ", ";
+
 
     uint16_t sum = V[x] + V[y];
 
@@ -747,7 +751,7 @@ void Chip::opcode_EX9E(uint16_t opcode)
         std::cout << "V[" << x << "] = " << V[x] << " is pressed" << std::endl;
         pc += 2;
     }
-    std::cout << "Skipping next instruction if V[" << x << "] = " << V[x] << " is pressed" << std::endl;
+    std::cout << "Skipping next instruction if V[" << x << "] = " << static_cast<int>(V[x]) << " is pressed" << std::endl;
 }
 
 void Chip::opcode_EXA1(uint16_t opcode)

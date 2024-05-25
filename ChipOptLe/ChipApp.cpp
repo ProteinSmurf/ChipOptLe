@@ -1,7 +1,7 @@
 #include "ChipApp.hpp"
 #include <iostream>
 #include <filesystem>
-#include "FileSystem.h"
+#include "FileSystem.hpp"
 #include "Chip.hpp"
 #include "ChipManager.hpp"
 
@@ -19,7 +19,11 @@ void ChipApp::initialize()
     gameSpeed_ = 1000;
     backgroundColor_ = sf::Color::Black;
     foregroundColor_ = sf::Color::White;
-    soundPath_ = "./sound/path";
+    soundPath_ = "./sounds/beep.wav";
+    soundOn_ = true;
+
+    //FileSystem fileSystem_();
+    fileSystem_ = FileSystem();
 
     std::cout << "Scale Factor: " << scaleFactor_ << std::endl;
     std::cout << "Game Speed: " << gameSpeed_ << std::endl;
@@ -204,21 +208,17 @@ void ChipApp::playMenu(sf::RenderWindow& window)
                     if (selectedItemIndex == 0)
                     {  // Games
                         std::cout << "Games selected" << std::endl;
-                        std::filesystem::path currentPath = std::filesystem::current_path();
-                        std::filesystem::path programsPath = currentPath / "programs";
-                        std::cout << programsPath.string() << std::endl;
-
-                        std::vector<std::string> contents = FileSystem::getDirectoryContents(programsPath.string());
+ 
+                        std::string programsPath = fileSystem_.getGamesDirectory();
+                        std::vector<std::string> contents = fileSystem_.getDirectoryContents(programsPath);
                         gameMenu(window, contents);
                     }
                     else if (selectedItemIndex == 1)
                     { // Tests
                         std::cout << "Tests selected" << std::endl;
-                        std::filesystem::path currentPath = std::filesystem::current_path();
-                        std::filesystem::path testROMPath = currentPath / "testROMs";
-                        std::cout << testROMPath.string() << std::endl;
-
-                        std::vector<std::string> contents = FileSystem::getDirectoryContents(testROMPath.string());
+           
+                        std::string testsPath = fileSystem_.getTestDirectory();
+                        std::vector<std::string> contents = fileSystem_.getDirectoryContents(testsPath);
                         testMenu(window, contents);
                         // Show tests menu
                     }
@@ -253,6 +253,9 @@ void ChipApp::optionsMenu(sf::RenderWindow& window)
     menuItems.emplace_back("Game Speed", font, fontSize_);
     menuItems.emplace_back("Color Theme", font, fontSize_);
     menuItems.emplace_back("Window Size", font, fontSize_);
+    menuItems.emplace_back("Choose Sound File", font, fontSize_);
+    menuItems.emplace_back("Toggle Sound ON/OFF", font, fontSize_);
+
 
 
     float totalHeight = 0;
@@ -319,6 +322,20 @@ void ChipApp::optionsMenu(sf::RenderWindow& window)
                     {
                         std::cout << "Window size menu chosen \n";
                         windowSizeMenu(window);
+                    }
+                    else if (selectedItemIndex == 3)
+                    {
+                        std::cout << "Choose Sound File menu chosen \n";
+               
+                        std::string soundsFolderPath = fileSystem_.getSoundsDirectory();
+                        std::vector<std::string> contents = fileSystem_.getDirectoryContents(soundsFolderPath);
+
+                        chooseSoundFileMenu(window, contents);
+                    }
+                    else if (selectedItemIndex == 4)
+                    {
+                        std::cout << "Toggle Sound menu chosen \n";
+                        soundToggleMenu(window);
                     }
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
@@ -404,17 +421,17 @@ void ChipApp::gameSpeedMenu(sf::RenderWindow& window)
                     if (selectedItemIndex == 0)
                     {
                         std::cout << "Game speed set to slow \n";
-                        gameSpeed_ = 2000;
+                        gameSpeed_ = 1000;
                     }
                     else if (selectedItemIndex == 1)
                     {
                         std::cout << "Game speed set to normal \n";
-                        gameSpeed_ = 1500;
+                        gameSpeed_ = 500;
                     }
                     else if (selectedItemIndex == 2)
                     {
                         std::cout << "Game speed set to fast \n";
-                        gameSpeed_ = 900;
+                        gameSpeed_ = 10;
                     }
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
@@ -514,7 +531,7 @@ void ChipApp::gameMenu(sf::RenderWindow& window, const std::vector<std::string>&
 
                     ChipManager chipManager(chip);
                     soundPath_ = "./sounds/1ms_beep_sequence.wav";
-                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_);
+                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_, soundOn_);
                     chipManager.start();
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
@@ -599,19 +616,18 @@ void ChipApp::testMenu(sf::RenderWindow& window, const std::vector<std::string>&
                 }
                 else if (event.key.code == sf::Keyboard::Enter)
                 {
-                    std::cout << "Selected game: " << programContents[selectedItemIndex] << std::endl;
-                    // Launch the chip Manager with selected game
-                    std::string gamePath = "./testROMs/" + programContents[selectedItemIndex];
-                    std::cout << "Selected game path: " << gamePath << std::endl;
+                    std::cout << "Selected test: " << programContents[selectedItemIndex] << std::endl;
+
+                    std::string testPath = fileSystem_.appendToTestROMsPath(programContents[selectedItemIndex]);
+                    std::cout << "Selected test path: " << testPath << std::endl;
 
                     window.close();
                     Chip chip;
                     chip.init();
-                    chip.loadProgram(gamePath);
+                    chip.loadProgram(testPath);
 
                     ChipManager chipManager(chip);
-                    soundPath_ = "./sounds/1ms_beep_sequence.wav";
-                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_);
+                    chipManager.setParameters(scaleFactor_, gameSpeed_, backgroundColor_, foregroundColor_, soundPath_, soundOn_);
                     chipManager.start();
                 }
                 else if (event.key.code == sf::Keyboard::Escape)
@@ -999,6 +1015,185 @@ void ChipApp::color2Menu(sf::RenderWindow& window)
                 {
                     std::cout << "Going to previous menu \n";
                     colorThemeMenu(window);
+                }
+            }
+        }
+
+        window.clear(sf::Color::Black);
+        for (const auto& item : menuItems)
+        {
+            window.draw(item);
+        }
+        window.display();
+    }
+}
+
+void ChipApp::soundToggleMenu(sf::RenderWindow& window)
+{
+    sf::Font font;
+    if (!font.loadFromFile("munro.ttf"))
+    {
+        std::cerr << "Failed to load font file." << std::endl;
+        return;
+    }
+
+    std::vector<sf::Text> menuItems;
+    menuItems.emplace_back("ON", font, fontSize_);
+    menuItems.emplace_back("OFF", font, fontSize_);
+
+    float totalHeight = 0;
+    for (const auto& item : menuItems)
+    {
+        totalHeight += item.getLocalBounds().height;
+    }
+
+    float startY = (window.getSize().y - totalHeight) / 2;
+
+    for (size_t i = 0; i < menuItems.size(); i++)
+    {
+        sf::Text& menuItem = menuItems[i];
+        menuItem.setPosition((window.getSize().x - menuItem.getLocalBounds().width) / 2, startY);
+        startY += menuItem.getLocalBounds().height + 20;
+    }
+
+    int selectedItemIndex = 0;
+    menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+            else if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Up)
+                {
+                    if (selectedItemIndex > 0) {
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::White);
+                        selectedItemIndex--;
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+                    }
+                }
+                else if (event.key.code == sf::Keyboard::Down)
+                {
+                    if (selectedItemIndex < menuItems.size() - 1)
+                    {
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::White);
+                        selectedItemIndex++;
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+                    }
+                }
+                else if (event.key.code == sf::Keyboard::Enter)
+                {
+                    if (selectedItemIndex == 0)
+                    {
+                        std::cout << "Sound Turned ON  \n";
+                        soundOn_ = true;
+                    }
+                    else if (selectedItemIndex == 1)
+                    {
+                        std::cout << "Sound Turned OFF \n";
+                        soundOn_ = false;
+                    }
+
+                }
+                else if (event.key.code == sf::Keyboard::Escape)
+                {
+                    std::cout << "Going to previous menu \n";
+                    optionsMenu(window);
+                }
+            }
+        }
+
+
+        window.clear(sf::Color::Black);
+        for (const auto& item : menuItems)
+        {
+            window.draw(item);
+        }
+        window.display();
+    }
+}
+
+
+void ChipApp::chooseSoundFileMenu(sf::RenderWindow& window, const std::vector<std::string>& programContents)
+{
+    sf::Font font;
+    if (!font.loadFromFile("munro.ttf"))
+    {
+        std::cerr << "Failed to load font file." << std::endl;
+        return;
+    }
+
+    std::vector<sf::Text> menuItems;
+
+
+    for (const auto& game : programContents)
+    {
+        menuItems.emplace_back(game, font, fontSize_);
+    }
+
+    float totalHeight = 0;
+    for (const auto& item : menuItems)
+    {
+        totalHeight += item.getLocalBounds().height;
+    }
+
+    float startY = (window.getSize().y - totalHeight) / 2;
+
+    for (size_t i = 0; i < menuItems.size(); i++)
+    {
+        sf::Text& menuItem = menuItems[i];
+        menuItem.setPosition((window.getSize().x - menuItem.getLocalBounds().width) / 2, startY);
+        startY += menuItem.getLocalBounds().height + 20;
+    }
+
+    int selectedItemIndex = 0;
+    menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+            else if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::Up)
+                {
+                    if (selectedItemIndex > 0) {
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::White);
+                        selectedItemIndex--;
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+                    }
+                }
+                else if (event.key.code == sf::Keyboard::Down)
+                {
+                    if (selectedItemIndex < menuItems.size() - 1)
+                    {
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::White);
+                        selectedItemIndex++;
+                        menuItems[selectedItemIndex].setFillColor(sf::Color::Red);
+                    }
+                }
+                else if (event.key.code == sf::Keyboard::Enter)
+                {
+                    std::cout << "Selected sound file: " << programContents[selectedItemIndex] << std::endl;
+                    // Launch the chip Manager with selected game
+                    soundPath_ = "./sounds/" + programContents[selectedItemIndex];
+                   
+                }
+                else if (event.key.code == sf::Keyboard::Escape)
+                {
+                    std::cout << "Going to previous menu \n";
+                    playMenu(window);
                 }
             }
         }

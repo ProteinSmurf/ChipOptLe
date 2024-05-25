@@ -1,10 +1,10 @@
 #include <thread>
 #include "ChipManager.hpp"
-#include "Audio.h"
+
 
 ChipManager::ChipManager(Chip& chip) : chip(chip) 
 {
-   
+    initialize();
 }
 
 void ChipManager::start()
@@ -13,17 +13,19 @@ void ChipManager::start()
     run(window);
 }
 
-void ChipManager::setParameters(int scaleFactor, 
-    int gameSpeed,
+void ChipManager::setParameters(const int scaleFactor, 
+    const int gameSpeed,
     const sf::Color& backgroundColor, 
     const sf::Color& foregroundColor,
-    const std::string& soundPath) 
+    const std::string& soundPath,
+    const bool soundOn) 
 {
     scaleFactor_ = scaleFactor;
     gameSpeed_ = gameSpeed;
     backgroundColor_ = backgroundColor;
     foregroundColor_ = foregroundColor;
     soundPath_ = soundPath;
+    soundOn_ = soundOn;
 
     chipDisplayWidth_ = 64;
     chipDisplayHeight_ = 32;
@@ -65,14 +67,11 @@ void ChipManager::run(sf::RenderWindow& window)
             }
         }
 
-        // Update chip with current key buffer
         chip.setKeyBuffer(getKeyBuffer());
         chip.run();
-        if (chip.needsPlaySound())
+        if (soundOn_ == true && chip.needsPlaySound() == true)
         {
-            //1ms_beep_sequence
-            //beep
-            Audio::playSound("./sounds/1ms_beep_sequence.wav");
+            audioModule.playSound(soundPath_);
             chip.removePlaySoundFlag();
         }
         
@@ -136,7 +135,7 @@ void ChipManager::run(sf::RenderWindow& window)
         //DEFAULT CHIP SPEED: 60 Hz ( according to spec ) 
         // 60 Hz = 60 cycles / second -> cycleTime = 1/60 ~= 0.167 ms
         //std::this_thread::sleep_for(std::chrono::milliseconds(16)); 
-        //std::this_thread::sleep_for(std::chrono::nanoseconds(700));
+        std::this_thread::sleep_for(std::chrono::nanoseconds(gameSpeed_));
 
     }
 }
@@ -179,6 +178,15 @@ int ChipManager::mapSFKeyToChip8(sf::Keyboard::Key sfKey)
 const int* ChipManager::getKeyBuffer() const
 {
     return keyBuffer;
+}
+
+void ChipManager::initialize()
+{
+    for (int i = 0; i < 16; i++)
+    {
+        keyBuffer[i] = 0;
+    }
+    audioModule = AudioModule();
 }
 
 
