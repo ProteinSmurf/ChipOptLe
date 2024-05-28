@@ -349,7 +349,8 @@ void Chip::opcode_3XNN(uint16_t opcode)
     if (V[x] == nn)
     {
         pc += 4;
-        std::cout << "Skipping next instruction (V[" << x << "] == " << nn << ")" << std::endl;
+        std::cout << "Skipping next instruction (V[" << static_cast<int>(x) << "] == " << static_cast<int>(nn) << ")" << std::endl;
+
     }
     else
     {
@@ -364,12 +365,12 @@ void Chip::opcode_4XNN(uint16_t opcode)
     uint16_t nn = opcode & 0x00FF;
     if (V[x] != nn)
     {
-        std::cout << "Skipping next instruction V[" << x << "] = " << V[x] << " != " << nn << std::endl;
+        std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " != " << static_cast<int>(nn) << std::endl;
         pc += 4;
     }
     else
     {
-        std::cout << "Not skipping next instruction V[" << x << "] = " << V[x] << " == " << nn << std::endl;
+        std::cout << "Not skipping next instruction V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " == " << static_cast<int>(nn) << std::endl;
         pc += 2;
     }
 }
@@ -380,12 +381,12 @@ void Chip::opcode_5XY0(uint16_t opcode)
     uint16_t y = (opcode & 0x00F0) >> 4;  // here same as X but less bits to shift for Y to become rightm ost nibble
     if (V[x] == V[y])
     {
-        std::cout << "Skipping next instruction V[" << x << "] == V[" << y << "]" << std::endl;
+        std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] == V[" << static_cast<int>(y) << "]" << std::endl;
         pc += 4;
     }
     else
     {
-        std::cout << "Skipping next instruction V[" << x << "] =/= V[" << y << "]" << std::endl;
+        std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] =/= V[" << static_cast<int>(y) << "]" << std::endl;
         pc += 2;
     }
 }
@@ -396,7 +397,7 @@ void Chip::opcode_6XNN(uint16_t opcode)
     uint16_t x = (opcode & 0x0F00) >> 8;
     V[x] = opcode & 0x00FF;
     pc += 2;
-    std::cout << "Setting V[" << x << "] to " << (int)V[x] << std::endl;
+    std::cout << "Setting V[" << static_cast<int>(x) << "] to " << static_cast<int>(V[x]) << std::endl;
 }
 
 
@@ -407,7 +408,8 @@ void Chip::opcode_7XNN(uint16_t opcode)
     uint16_t nn = opcode & 0x00FF;
     V[x] += nn;
     pc += 2;
-    std::cout << "Adding " << nn << " to V[" << x << "] = " << (int)V[x] << std::endl;
+    std::cout << "Adding " << static_cast<int>(nn) << " to V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << std::endl;
+
 }
 
 void Chip::opcode_8XY0(uint16_t opcode)
@@ -415,7 +417,7 @@ void Chip::opcode_8XY0(uint16_t opcode)
     //8XY0: Sets VX to the value of VY
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-    std::cout << "Setting V[" << x << "] to " << (V[y]) << std::endl;
+    std::cout << "Setting V[" << static_cast<int>(x) << "] to " << static_cast<int>(V[y]) << std::endl;
     V[x] = V[y];
     pc += 2;
 }
@@ -425,7 +427,7 @@ void Chip::opcode_8XY1(uint16_t opcode)
     //8XY1 Sets VX to VX or VY.
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-    std::cout << "Setting V[" << x << "] = V[" << x << "] | V[" << y << "]" << std::endl;
+    std::cout << "Setting V[" << static_cast<int>(x) << "] = V[" << static_cast<int>(x) << "] | V[" << static_cast<int>(y) << "]" << std::endl;
     V[x] = (V[x] | V[y]) & 0xFF;
     pc += 2;
 }
@@ -448,7 +450,7 @@ void Chip::opcode_8XY3(uint16_t opcode)
     //8XY3: Sets VX to VX xor VY.[13]
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-    std::cout << "Setting V[" << x << "] = V[" << x << "] ^ V[" << y << "]" << std::endl;
+    std::cout << "Setting V[" << static_cast<int>(x) << "] = V[" << static_cast<int>(x) << "] ^ V[" << static_cast<int>(y) << "]" << std::endl;
     V[x] = (V[x] ^ V[y]) & 0xFF;
     pc += 2;
 }
@@ -554,7 +556,7 @@ void Chip::opcode_8XY7(uint16_t opcode)
         V[0xF] = 0; 
         std::cout << "Underflow" << std::endl;
     }
-    std::cout << "V[" << x << "] = V[" << y << "] - V[" << x << "], Applies Underflow if needed" << std::endl;
+    std::cout << "V[" << static_cast<int>(x) << "] = V[" << static_cast<int>(y) << "] - V[" << static_cast<int>(x) << "], Applies Underflow if needed" << std::endl;
     pc += 2;
 }
 
@@ -577,7 +579,7 @@ void Chip::opcode_8XYE(uint16_t opcode)
     V[0xF] = (V[x] & 0x80) >> 7;  
     V[x] = V[x] << 1;
     pc += 2;
-    std::cout << "Shift V[ " << x << "] << 1 and VF to MSB of VX" << std::endl;
+    std::cout << "Shift V[" << static_cast<int>(x) << "] << 1 and VF to MSB of VX" << std::endl;
 
     //temporary comm to check myself
     //power of 2:  7 6 5 4 - 3 2 1 0         2^0 = 1 , 2^1 = 2, 2^2 = 4, 2^3 = 8, 2^4 = 16, 2^5 = 32, 2^6 = 64, 2^7 = 128 , 2^8 = 256
@@ -594,12 +596,12 @@ void Chip::opcode_9XY0(uint16_t opcode)
     uint16_t y = (opcode & 0x00F0) >> 4;
     if (V[x] != V[y])
     {
-        std::cout << "Skipping next instruction V[" << x << "] != V[" << y << "]" << std::endl;
+        std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] != V[" << static_cast<int>(y) << "]" << std::endl;
         pc += 4;
     }
     else
     {
-        std::cout << "Skipping next instruction V[" << x << "] !/= V[" << y << "]" << std::endl;
+        std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] !/= V[" << static_cast<int>(y) << "]" << std::endl;
         pc += 2;
     }
 }
