@@ -9,6 +9,8 @@
 
 
 //Initialize everything to avoid possible unwanted behaviour
+
+
 void Chip::init()
 {
     memset(memory, 0, sizeof(memory));
@@ -28,18 +30,17 @@ void Chip::init()
     needPlaySound = false;
     loadFontset();
 }
-
-
-void Chip::run()
-{
-    // Fetch Opcode - Opcode is 2 byte ( 16 bit ) 
+// Fetch Opcode - Opcode is 2 byte ( 16 bit ) 
     // if Memory[0x200] = 0xAB and Memory[0x201] = 0xCD
     // Opcode = 0xAB00 | 0x00CD = 0xABCD
 
+//Decode opcode + execute when done decoding
+
+void Chip::run()
+{
     uint16_t opcode = (memory[pc] << 8) | memory[pc + 1];
     std::cout << std::hex << std::uppercase << opcode << ": ";
 
-    //Decode opcode + execute when done decoding
     switch (opcode & 0xF000)
     {
     case 0x0000: //Multi-case
@@ -56,13 +57,13 @@ void Chip::run()
                 opcode_00EE();
                 break;
             }
-            default: //0NNN: Calls RCA 1802 Program at address NNN ( NOT USED IN MODERN IMPLEMENTATIONS )
+            default: 
             {
                 unsupportedOpcode();
                 break;
             }
         }
-        break; // Added this break to match the opening brace
+        break; 
     }
     case 0x1000: //1NNN: Jumps to address NNN
     {
@@ -304,9 +305,8 @@ void Chip::opcode_00E0()
 void Chip::opcode_00EE()
 {
     // Returns from subroutine
-
     stackPointer--;
-    pc = stack[stackPointer] + 2; // move forward from place i left not same place
+    pc = stack[stackPointer] + 2;
     std::cout << "Returning to " << std::hex << std::uppercase << pc << std::endl;
 }
 
@@ -318,22 +318,21 @@ void Chip::opcode_1NNN(uint16_t opcode)
     std::cout << "Jumping to " << std::hex << std::uppercase << pc << std::endl;
 }
 
+// 2NNN: Calls subroutine at NNN
+
+// stack is a LIFO(last in, first out)
+// Example for opcode behaviour to help understand: 
+// pc = 0x200  ( current instruction in memory )
+// stack[0] = pc ( 0x200)   | Store return address to stack[0] 
+// stackpointer increment 
+// pc = opcode & 0xFFF ( NNN )
+// so basically Save current instruction from memory  to stack , PC go to nnn 
+// ( do whatever untill returning from subroutine , in which case stack decrements and
+// PC = original position )
+
 void Chip::opcode_2NNN(uint16_t opcode)
 {   
-    //2NNN: Calls subroutine at NNN
-    
-    // stack is a LIFO(last in, first out)
-    // Example for opcode behaviour to help understand: 
-    // pc = 0x200  ( current instruction in memory )
-    // stack[0] = pc ( 0x200)   | Store return address to stack[0] 
-    // stackpointer increment 
-    // pc = opcode & 0xFFF ( NNN )
-    // so basically Save current instruction from memory  to stack , PC go to nnn 
-    // ( do whatever untill returning from subroutine , in which case stack decrements and
-    // PC = original position )
-
     uint16_t nnn = opcode & 0x0FFF;
-
     stack[stackPointer] = pc;
     stackPointer++;
     pc = nnn;
@@ -343,7 +342,7 @@ void Chip::opcode_2NNN(uint16_t opcode)
 void Chip::opcode_3XNN(uint16_t opcode)
 {
     //3XNN: Skips the next instruction if VX equals NN
-    uint16_t x = (opcode & 0x0F00) >> 8; // shift right to become Right most nibble as I need the number itself
+    uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t nn = opcode & 0x00FF;
 
     if (V[x] == nn)
@@ -355,7 +354,7 @@ void Chip::opcode_3XNN(uint16_t opcode)
     else
     {
         pc += 2;
-        std::cout << "Not skipping next instruction (V[" << x << "] =/= " << nn << ")" << std::endl;
+        std::cout << "Not skipping next instruction (V[" << static_cast<int>(x) << "] =/= " << static_cast<int>(nn) << ")" << std::endl;
     }
 }
 
@@ -377,8 +376,8 @@ void Chip::opcode_4XNN(uint16_t opcode)
 
 void Chip::opcode_5XY0(uint16_t opcode)
 {
-    uint16_t x = (opcode & 0x0F00) >> 8;  //same as 4XNN
-    uint16_t y = (opcode & 0x00F0) >> 4;  // here same as X but less bits to shift for Y to become rightm ost nibble
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    uint16_t y = (opcode & 0x00F0) >> 4;  
     if (V[x] == V[y])
     {
         std::cout << "Skipping next instruction V[" << static_cast<int>(x) << "] == V[" << static_cast<int>(y) << "]" << std::endl;
@@ -395,7 +394,8 @@ void Chip::opcode_6XNN(uint16_t opcode)
 {
     // 6XNN: Set VX to NN
     uint16_t x = (opcode & 0x0F00) >> 8;
-    V[x] = opcode & 0x00FF;
+    uint16_t nn = opcode & 0x00FF;
+    V[x] = nn;
     pc += 2;
     std::cout << "Setting V[" << static_cast<int>(x) << "] to " << static_cast<int>(V[x]) << std::endl;
 }
@@ -447,18 +447,18 @@ void Chip::opcode_8XY2(uint16_t opcode)
 
 void Chip::opcode_8XY3(uint16_t opcode)
 {
-    //8XY3: Sets VX to VX xor VY.[13]
+    //8XY3: Sets VX to VX xor VY.
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
     std::cout << "Setting V[" << static_cast<int>(x) << "] = V[" << static_cast<int>(x) << "] ^ V[" << static_cast<int>(y) << "]" << std::endl;
     V[x] = (V[x] ^ V[y]) & 0xFF;
     pc += 2;
 }
+// Add VY to VX. VF is set to 1 when carry applies else to 0
 
 void Chip::opcode_8XY4(uint16_t opcode)
 {
     // 8XY4: Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
-    // Add VY to VX. VF is set to 1 when carry applies else to 0
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
 
@@ -466,13 +466,9 @@ void Chip::opcode_8XY4(uint16_t opcode)
         << static_cast<int>(y) << "] (" << static_cast<int>(V[y]) << ") = "
         << static_cast<int>((V[x] + V[y]) & 0xFF) << ", ";
 
-
     uint16_t sum = V[x] + V[y];
-
- 
     V[x] = sum & 0xFF;
 
-    //// Check for carry
     if (sum > 0xFF)
     {
         V[0xF] = 1;
@@ -487,23 +483,17 @@ void Chip::opcode_8XY4(uint16_t opcode)
     pc += 2;
 }
 
+// and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
 
 void Chip::opcode_8XY5(uint16_t opcode)
 {
     // 8XY5: VY is subtracted from VX. VF is set to 0 when there's an underflow, 
-    // and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
-
     std::cout << "V[" << x << "] = " << static_cast<int>(V[x]) << ", V[" << y << "] = " << static_cast<int>(V[y]) << ", ";
-
-
     uint8_t originalVx = V[x];
 
-
     V[x] -= V[y];
-
-    
     if (V[x] > originalVx)
     {
         V[0xF] = 0; 
@@ -512,7 +502,6 @@ void Chip::opcode_8XY5(uint16_t opcode)
     {
         V[0xF] = 1; 
     }
-
     pc += 2;
     std::cout << "Result: V[" << x << "] = " << static_cast<int>(V[x]) << ", VF: " << static_cast<int>(V[0xF]) << std::endl;
 }
@@ -520,16 +509,12 @@ void Chip::opcode_8XY5(uint16_t opcode)
 
 
 
-
+//   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
+//   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
 
 void Chip::opcode_8XY6(uint16_t opcode)
 {   
-
     //8XY6: Shift VX right by one, VF is set to the least significant bit of VX
-    //   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
-    //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
-
-
     uint16_t x = (opcode & 0x0F00) >> 8;
 
     V[0xF] = V[x] & 0x1;   //VF = least significant bit of VX
@@ -540,7 +525,7 @@ void Chip::opcode_8XY6(uint16_t opcode)
 
 void Chip::opcode_8XY7(uint16_t opcode)
 {
-    // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
+    // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (VF set to 1 if VY >= VX).
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
 
@@ -560,20 +545,23 @@ void Chip::opcode_8XY7(uint16_t opcode)
     pc += 2;
 }
 
+//   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
+ //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
 
+
+ //In the CHIP-8 interpreter for the original COSMAC VIP, this instruction put the value of VY into VX, 
+ //and then shifted the value in VX 1 bit to the right 
+ //starting with CHIP - 48 and SUPER - CHIP in the early 1990s, 
+ //these instructions were changed so that they shifted VX in place, and ignored the Y completely.
+
+ //temporary comm to check myself
+    //power of 2:  7 6 5 4 - 3 2 1 0         2^0 = 1 , 2^1 = 2, 2^2 = 4, 2^3 = 8, 2^4 = 16, 2^5 = 32, 2^6 = 64, 2^7 = 128 , 2^8 = 256
+    //             1 0 0 0   0 0 0 0     -> 128
+    //   0 0 0 1 - 0 0 0 0 - 0 0 0 0     -> 256
 
 void Chip::opcode_8XYE(uint16_t opcode)
 {
     //8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1
-    //   Least Significant Bit (LSB) : The rightmost bit in a binary number.  2^0
-    //   Most Significant Bit  (MSB) : The leftmost bit in a binary number.
-
-
-    //In the CHIP-8 interpreter for the original COSMAC VIP, this instruction put the value of VY into VX, 
-    //and then shifted the value in VX 1 bit to the right 
-    //starting with CHIP - 48 and SUPER - CHIP in the early 1990s, 
-    //these instructions were changed so that they shifted VX in place, and ignored the Y completely.
-
     uint16_t x = (opcode & 0x0F00) >> 8;
 
     V[0xF] = (V[x] & 0x80) >> 7;  
@@ -581,17 +569,12 @@ void Chip::opcode_8XYE(uint16_t opcode)
     pc += 2;
     std::cout << "Shift V[" << static_cast<int>(x) << "] << 1 and VF to MSB of VX" << std::endl;
 
-    //temporary comm to check myself
-    //power of 2:  7 6 5 4 - 3 2 1 0         2^0 = 1 , 2^1 = 2, 2^2 = 4, 2^3 = 8, 2^4 = 16, 2^5 = 32, 2^6 = 64, 2^7 = 128 , 2^8 = 256
-    //             1 0 0 0   0 0 0 0     -> 128
-    //   0 0 0 1 - 0 0 0 0 - 0 0 0 0     -> 256
+ 
 }
-
 
 void Chip::opcode_9XY0(uint16_t opcode)
 {   
     // 9XY0: Skips the next instruction if VX doesn't equal VY. 
-
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t y = (opcode & 0x00F0) >> 4;
     if (V[x] != V[y])
@@ -615,20 +598,19 @@ void Chip::opcode_ANNN(uint16_t opcode)
     std::cout << "Set I to " << std::hex << std::uppercase << I << std::endl;
 }
 
+//Starting with CHIP - 48  changed to work as BXNN 
+// It will jump to the address XNN, plus the value in the register VX.
+// So the instruction B220 will jump to address 220 plus the value in the register V2.
+
+
+// I will stick to classic implementation of opcode the more modern one stops games from being playable for me
+//uint16_t x = (opcode & 0x0F00) >> 8;
+
 void Chip::opcode_BNNN(uint16_t opcode)
 {
     // BNNN: Jumps to the address NNN plus V0
-    //Starting with CHIP - 48  changed to work as BXNN 
-    // It will jump to the address XNN, plus the value in the register VX.
-    // So the instruction B220 will jump to address 220 plus the value in the register V2.
-
-
-    // I will stick to classic implementation of opcode the more modern one stops games from being playable for me
-    //uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t nnn = (opcode & 0x0FFF);
-    pc = nnn + (V[0] & 0xFF);
-
-              
+    pc = nnn + (V[0] & 0xFF);        
 }
 
 void Chip::opcode_CXNN(uint16_t opcode)
@@ -716,31 +698,30 @@ void Chip::opcode_DXYN(uint16_t opcode)
     pc += 2;
     needRedraw = true;
     std::cout << "Drawing at V[" << x << "] = " << x << ", V[" << y << "] = " << cordinate_Y << std::endl;
-    //              display[4*3] - small scale for concept  [width*height]
-    // 
-    //      [1] [2]  [3]   [4]            [1] [2]  [3]   [4]
-    //      [5] [6]  [7]   [8]            [5] [6]  [7]   [8]
-    //      [9] [10] [11]  [12]           [9] [10] [11]  [12]
-    //    
-    //     display[6]  = 4*1 + 2  -> display[n] = height_offset * rows_before + width_offset (magic formula :D )
-    //     display[10] = 4*2 + 2
-    // 
-    //       0   0   0   0              0   0   0   0
-    //       0   0   0   0     ->       0   1   0   0
-    //       0   0   0   0              0   0   0   0
 
 }
 
+//              display[4*3] - small scale for concept  [width*height]
+// 
+//      [1] [2]  [3]   [4]            [1] [2]  [3]   [4]
+//      [5] [6]  [7]   [8]            [5] [6]  [7]   [8]
+//      [9] [10] [11]  [12]           [9] [10] [11]  [12]
+//    
+//     display[6]  = 4*1 + 2  -> display[n] = height_offset * rows_before + width_offset (magic formula :D )
+//     display[10] = 4*2 + 2
+// 
+//       0   0   0   0              0   0   0   0
+//       0   0   0   0     ->       0   1   0   0
+//       0   0   0   0              0   0   0   0
 
 
-
+// Handling input:
+    // Key pressed = 1 , key not pressed = 0  
+    // Actually modifying the values based on keyboard input later
 
 void Chip::opcode_EX9E(uint16_t opcode)
 {
     // EX9E: Skip the next instruction if the Key VX is pressed
-    // Handling input:
-    // Key pressed = 1 , key not pressed = 0  
-    // Actually modifying the values based on keyboard input later
 
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t key = V[x];
@@ -750,10 +731,11 @@ void Chip::opcode_EX9E(uint16_t opcode)
     }
     else
     {
-        std::cout << "V[" << x << "] = " << V[x] << " is pressed" << std::endl;
+        std::cout << "V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " is pressed" << std::endl;
+
         pc += 2;
     }
-    std::cout << "Skipping next instruction if V[" << x << "] = " << static_cast<int>(V[x]) << " is pressed" << std::endl;
+    std::cout << "Skipping next instruction if V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " is pressed" << std::endl;
 }
 
 void Chip::opcode_EXA1(uint16_t opcode)
@@ -779,26 +761,25 @@ void Chip::opcode_FX07(uint16_t opcode)
     uint16_t x = (opcode & 0x0F00) >> 8;
     V[x] = delay_timer;
     pc += 2;
-    std::cout << "V[" << x << "] has been set to " << delay_timer << std::endl;
+    std::cout << "V[" << static_cast<int>(x) << "] has been set to " << static_cast<int>(delay_timer) << std::endl;
 }
+
+// A key press is awaited, 
+//  and then stored in VX (blocking operation, all instruction halted until next key event)
 
 void Chip::opcode_FX0A(uint16_t opcode)
 {
-    //FX0A:
-    // A key press is awaited, 
-    //  and then stored in VX (blocking operation, all instruction halted until next key event)
     uint16_t x = (opcode & 0x0F00) >> 8;
     for (int i = 0; i < 16; i++)
     {
-        //check if any key is pressed
         if (keys[i] == 1)
         {
-            V[x] = static_cast<uint8_t>(i); // index of key
-            pc += 2;                        // move forward to next opcode only when key is pressed
+            V[x] = static_cast<uint8_t>(i); 
+            pc += 2;
             break;
         }
     }
-    std::cout << "Awaiting key press to be stored in V[" << x << "]" << std::endl;
+    std::cout << "Awaiting key press to be stored in V[" << static_cast<int>(x) << "]" << std::endl;
 
 }
 
@@ -808,7 +789,7 @@ void Chip::opcode_FX15(uint16_t opcode)
     uint16_t x = (opcode & 0x0F00) >> 8;
     delay_timer = V[x];
     pc += 2;
-    std::cout << "Set delay_timer to V[" << x << "] = " << V[x] << std::endl;
+    std::cout << "Set delay_timer to V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << std::endl;
 }
 
 void Chip::opcode_FX18(uint16_t opcode)
@@ -821,39 +802,30 @@ void Chip::opcode_FX18(uint16_t opcode)
 
 void Chip::opcode_FX1E(uint16_t opcode)
 {   
-    //FX1E: Adds VX to I. VF is not affected 
+    //FX1E: Adds VX to I. 
     uint16_t x = (opcode & 0x0F00) >> 8;
     I += V[x];
-    std::cout << "Adding V[" << x << "] = " << V[x] << " to I" << std::endl;
+    std::cout << "Adding V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " to I" << std::endl;
     pc += 2;
 }
+// Characters 0-F (in hexadecimal) are represented by a 4x5 font
+// EXAMPLE: 0xF0, 0x90, 0x90, 0x90, 0xF0, // 0  |   each character has 5*sprite data
 
 void Chip::opcode_FX29(uint16_t opcode)
 {   //FX29: Sets I to the location of the sprite for the character in VX.
-    // Characters 0-F (in hexadecimal) are represented by a 4x5 font
     uint16_t x = (opcode & 0x0F00) >> 8;
     uint16_t character = V[x];
 
-    // EXAMPLE: 0xF0, 0x90, 0x90, 0x90, 0xF0, // 0  |   each character has 5*sprite data
     I = 0x050 + (character * 5);
-    std::cout << "Setting I to Character V[" << x << "] = " << V[x] << " Offset to 0x" << std::hex << std::uppercase << static_cast<int>(I) << std::endl;
+    std::cout << "Setting I to Character V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " Offset to 0x" << std::hex << std::uppercase << static_cast<int>(I) << std::endl;
     pc += 2;
 }
 
-void Chip::opcode_FX33(uint16_t opcode)
-{
-    //FX33: Stores the binary-coded decimal representation of VX, 
-    //with the hundreds digit in memory at location in I, 
+//with the hundreds digit in memory at location in I, 
     // the tens digit at location I+1, 
     // and the ones digit at location I+2
-    uint16_t x = (opcode & 0x0F00) >> 8;
-    int value = V[x];
-    int hundreds = value / 100;
-    value -= hundreds * 100;
-    int tens = value / 10;
-    value -= tens * 10;
 
-    // Ex: value = 123               |
+   // Ex: value = 123               |
     // hundreds = 123 / 100 = 1      |  memory[I] = 1
     // value = 123 - (1*100) = 23    |
     // tens = value / 10 = 2         |  memory[I+1] = 2
@@ -861,19 +833,29 @@ void Chip::opcode_FX33(uint16_t opcode)
     //                               |  
     //  Binary-Coded Decimal V[x] = 123 as {1,2,3}
     //
+void Chip::opcode_FX33(uint16_t opcode)
+{
+    //FX33: Stores the binary-coded decimal representation of VX, 
+
+    uint16_t x = (opcode & 0x0F00) >> 8;
+    int value = V[x];
+    int hundreds = value / 100;
+    value -= hundreds * 100;
+    int tens = value / 10;
+    value -= tens * 10;
+
     memory[I] = hundreds;  
     memory[I + 1] = tens;
     memory[I + 2] = value;
-    std::cout << "Storing Binary-Coded Decimal V[" << x << "] = " << V[x] << " as { " << hundreds << ", " << tens << ", " << value << "}" << std::endl;
+    std::cout << "Storing Binary-Coded Decimal V[" << static_cast<int>(x) << "] = " << static_cast<int>(V[x]) << " as { " << hundreds << ", " << tens << ", " << value << "}" << std::endl;
     pc += 2;
 }
 
+//  starting at address I. The offset from I is increased by 1 for each value WRITTEN, 
+//  but I itself is left unmodified
 void Chip::opcode_FX55(uint16_t opcode)
 {
     //FX55: Stores from V0 to VX (including VX) in memory, 
-    //  starting at address I. The offset from I is increased by 1 for each value WRITTEN, 
-    //  but I itself is left unmodified
-
     uint16_t x = (opcode & 0x0F00) >> 8;
     int offset = 0;
     for (int i = 0; i <= x; i++)
@@ -881,16 +863,15 @@ void Chip::opcode_FX55(uint16_t opcode)
         memory[I + offset] = V[i];
         offset++;
     }
-
     std::cout << "Setting Memory[" << std::hex << std::uppercase << I << " + n] = V[0] to V[x]" << std::endl;
     pc += 2;
 }
 
+//starting at address I. The offset from I is increased by 1 for each value READ, 
+ //but I itself is left unmodified
 void Chip::opcode_FX65(uint16_t opcode)
 {
     //FX65: Fills from V0 to VX (including VX) with values from memory, 
-    //starting at address I. The offset from I is increased by 1 for each value READ, 
-    //but I itself is left unmodified
     uint16_t x = (opcode & 0x0F00) >> 8;
     int offset = 0;
     for (int i = 0; i <= x; i++)
@@ -898,7 +879,7 @@ void Chip::opcode_FX65(uint16_t opcode)
         V[i] = memory[I + offset];
         offset++;
     }
-    std::cout << "Setting V[0] to V[" << x << "] to the values of memory[0x" << std::hex << std::uppercase << static_cast<int>(I) << "]" << std::endl;
+    std::cout << "Setting V[0] to V[" << static_cast<int>(x) << "] to the values of memory[0x" << std::hex << std::uppercase << static_cast<int>(I) << "]" << std::endl;
     pc += 2;
 }
 
@@ -929,6 +910,7 @@ void Chip::loadProgram(const std::string& filePath)
     printMemoryMap();
 }
 
+
 void Chip::loadFontset()
 {
     const int fontsetSize = 80; // Size of the fontset array
@@ -948,7 +930,8 @@ void Chip::printMemoryMap()
     for (int address = 0; address < MEMORY_SIZE; address += BYTES_PER_ROW)
     {
         // print memory address in hexadec format
-        // std::setw(3) sets the output to 3 characters ,ff the address is less than 3 characters, it will be padded with 0 ( std::setfill('0') sets the fill character to 0 )
+        // std::setw(3) sets the output to 3 characters ,ff the address is less than 3 characters, 
+        // it will be padded with 0 ( std::setfill('0') sets the fill character to 0 )
         std::cout << "0x" << std::setw(3) << std::setfill('0') << std::hex << std::uppercase << address << ":  | ";
 
 
@@ -979,6 +962,7 @@ void Chip::printMemoryMap()
         std::cout << std::endl;
     }
 }
+
 
 uint8_t* Chip::getDisplay() 
 {
@@ -1013,12 +997,11 @@ void Chip::setKeyBuffer(const int* keyBuffer)
     {
         keys[i] = keyBuffer[i];
     }
-
-    //for debug
+}
+//for debug
     /*std::cout << "\n";
     for (int i = 0; i < 16; i++)
     {
         std::cout << "keyBuffer[" << i << "] = " << keys[i] << "\n";
         std::cout << "key[" << i << "] = " << keys[i] << "\n";
     }*/
-}
